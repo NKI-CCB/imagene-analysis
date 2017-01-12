@@ -1,0 +1,6 @@
+Sphinx~=1.5
+coverage~=4.3
+flake8==3.2.*
+matplotlib~=2.0.0rc2
+numpy==1.11.*
+xarray==0.9.*
