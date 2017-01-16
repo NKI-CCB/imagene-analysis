@@ -3,6 +3,7 @@ import csv
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 
@@ -18,12 +19,17 @@ def parse_args():
         'sample_tracking',
         help="Sample tracking sheet to map identifiers.",
     )
+    parser.add_argument(
+        'gene_annotation',
+        help="Annotation of genes",
+    )
     parser.add_argument('out', help='Output NetCDF file.')
     args = parser.parse_args()
 
     # Check for existence for paths
     args.gene_expression_data = Path(args.gene_expression_data).resolve()
     args.sample_tracking = Path(args.sample_tracking).resolve()
+    args.gene_annotation = Path(args.gene_annotation).resolve()
     args.out = Path(args.out)
     args.out = args.out.parent.resolve() / args.out.name
 
@@ -60,6 +66,39 @@ def map_sample_to_patient(samples, sample_tracking_path):
     return patients
 
 
+def merge_vals(v):
+    v = set(v)
+    if len(v) > 1:
+        return ''
+    else:
+        return v.pop()
+
+
+def annotate_genes(data_set, annot_path):
+    data_set['gene'].values = [s.split('.')[0]
+                               for s in data_set['gene'].values]
+    annot = pd.read_table(annot_path, dtype=str, na_filter=False)
+    annot = annot.groupby('Ensembl Gene ID').aggregate(merge_vals)
+    annot = annot.loc[data_set['gene']]
+
+    data_set['entrez_gene_id'] = xr.DataArray(
+        data=np.array(annot['EntrezGene ID'].fillna(-1).replace('', -1),
+                      dtype='int64'),
+        dims=('gene',),
+    )
+    data_set['entrez_gene_id'].encoding['_FillValue'] = -1
+    data_set['entrez_gene_id'].attrs['long_name'] = 'EntrezGene ID'
+
+    data_set['hgnc_symbol'] = xr.DataArray(
+        data=np.array(annot['HGNC symbol'].fillna(''), dtype='object'),
+        dims=('gene',),
+    )
+    data_set['hgnc_symbol'].encoding['_FillValue'] = ''
+    data_set['hgnc_symbol'].attrs['long_name'] = 'HGNC Symbol'
+
+    return data_set
+
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -71,5 +110,7 @@ if __name__ == "__main__":
                                                 args.sample_tracking)
     data_set = data_set.swap_dims({'sample': 'patient'})
     data_set = data_set.reset_coords(['batch', 'sample'])
+
+    data_set = annotate_genes(data_set, args.gene_annotation)
 
     data_set.to_netcdf(str(args.out))

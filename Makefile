@@ -63,10 +63,17 @@ data/raw/mri-features.xlsx:
 	mkdir -p data/raw
 	. ./.env; echo "user = $$BEEHUB_USERNAME:$$BEEHUB_PASSWORD" | curl -K - https://beehub.nl/home/tychobismeijer/Imagene/mri/2016-03-31-Tumor_Parenchym_Features_variablenamesupdated.xlsx -o $@
 
+# Processed
+
 data/processed/mri-features.nc: src/data/process_mri.py data/raw/mri-features.xlsx
 	mkdir -p data/processed
 	$(PYTHON) $^ $@
 
-data/processed/gene-expression.nc: src/data/process_gene_expression.py data/raw/gene-expression.nc data/raw/sample-tracking.tsv
+data/processed/gene-expression.nc: src/data/process_gene_expression.py data/raw/gene-expression.nc data/raw/sample-tracking.tsv data/annotation/ensembl_annotation.tsv
 	mkdir -p data/processed
 	$(PYTHON) $^ $@
+
+# Annotation
+#
+data/annotation/ensembl_annotation.tsv: src/data/query_ensembl_reference.py
+	$(PYTHON) $< $@
