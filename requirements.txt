@@ -9,3 +9,5 @@ NetCDF4~=1.2
 h5py~=2.6
 requests~=2.12
 xlrd~=1.0
+ipython~=5.1
+scipy~=0.18
