@@ -1,3 +1,4 @@
+pip
 Sphinx~=1.5
 coverage~=4.3
 flake8==3.2.*
@@ -10,4 +11,5 @@ h5py~=2.6
 requests~=2.12
 xlrd~=1.0
 ipython~=5.1
+ipykernel
 scipy~=0.18

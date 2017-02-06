@@ -58,7 +58,7 @@ def map_sample_to_patient(samples, sample_tracking_path):
 
     patients = [sample_patient_map[s] for s in samples.values]
     patients = xr.DataArray(
-        data=np.array(patients, dtype='int64'),
+        data=np.array(patients, dtype='int32'),
         coords=samples.coords,
         dims=samples.dims
     )
@@ -83,7 +83,7 @@ def annotate_genes(data_set, annot_path):
 
     data_set['entrez_gene_id'] = xr.DataArray(
         data=np.array(annot['EntrezGene ID'].fillna(-1).replace('', -1),
-                      dtype='int64'),
+                      dtype='int32'),
         dims=('gene',),
     )
     data_set['entrez_gene_id'].encoding['_FillValue'] = -1
@@ -99,17 +99,17 @@ def annotate_genes(data_set, annot_path):
     return data_set
 
 
+
 if __name__ == "__main__":
     args = parse_args()
 
     data_set = xr.open_dataset(str(args.gene_expression_data))
 
-    data_set = data_set.rename({'gene_expression': 'read_count'})
     data_set['log2_cpm'] = counts_to_log2_cpm(data_set['read_count'])
     data_set['patient'] = map_sample_to_patient(data_set['sample'],
                                                 args.sample_tracking)
     data_set = data_set.swap_dims({'sample': 'patient'})
-    data_set = data_set.reset_coords(['batch', 'sample'])
+    data_set = data_set.reset_coords(['sample'])
 
     data_set = annotate_genes(data_set, args.gene_annotation)
 

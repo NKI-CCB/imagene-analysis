@@ -38,7 +38,7 @@ def read_coefficients(sfa_model_path):
         entrezgene_id = [int(s.decode().split('|')[1])
                          for s in f['feature names'][rnaseq_slice]]
 
-        coeff_array = np.array(f['coefficients'][rnaseq_slice, :])
+        coeff_array = np.array(f['coefficients'])
 
     factor = ['Factor {}'.format(i+1)
               for i in range(coeff_array.shape[1])]
@@ -73,16 +73,18 @@ def read_gene_expression(gene_expression_path):
 
     gexp_ds = gexp_ds.swap_dims({'gene': 'entrez_gene_id'})
 
-    return gexp_ds['log2_cpm']
+    return gexp_ds
 
 
 def apply_sfa(gene_expression, coefficients):
     shared_genes = (gene_expression.indexes['entrez_gene_id'] &
                     coefficients.indexes['entrez_gene_id'])
     gene_expression = gene_expression.reindex(entrez_gene_id=shared_genes)
+    gexp = gene_expression['log2_cpm']
     coefficients = coefficients.reindex(entrez_gene_id=shared_genes)
 
-    X = np.array(gene_expression.transpose('entrez_gene_id', 'patient').values)
+    X = np.array(gexp.transpose('entrez_gene_id', 'patient').values)
+    X = X - np.mean(X, 1, keepdims=True)
     B = np.array(coefficients.transpose('entrez_gene_id', 'factor').values)
 
     btb = (B.T @ B + np.identity(B.shape[1]))

@@ -15,15 +15,11 @@ all: venv requirements data models
 
 venv:
 	$(PYTHON) -m venv venv
-	mkdir -p venv/lib/R/site-library
-	echo 'R_LIBS_SITE="$$VIRTUAL_ENV/lib/R/site-library"' >> venv/bin/activate
-	echo 'export R_LIBS_SITE' >> venv/bin/activate
 
 ACTIVATE_ENV=. venv/bin/activate
 
 requirements: venv
-	$(ACTIVATE_ENV); pip install -r requirements.txt
-	$(ACTIVATE_ENV); Rscript requirements.R
+	$(ACTIVATE_ENV); pip install -q -r requirements.txt
 .PHONY: requirements
 
 update-requirements: venv
@@ -55,7 +51,6 @@ help:
 
 # Load environment and make files with project rules.
 
-export PYTHON
 Makefile: ;
 %: requirements
-	$(MAKE) -f project-rules.Makefile $@
+	$(ACTIVATE_ENV); $(MAKE) -f project-rules.Makefile $@
