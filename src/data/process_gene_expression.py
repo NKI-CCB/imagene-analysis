@@ -58,7 +58,7 @@ def map_sample_to_patient(samples, sample_tracking_path):
 
     patients = [sample_patient_map[s] for s in samples.values]
     patients = xr.DataArray(
-        data=np.array(patients, dtype='int32'),
+        data=np.array(patients, dtype='int64'),
         coords=samples.coords,
         dims=samples.dims
     )
@@ -83,7 +83,7 @@ def annotate_genes(data_set, annot_path):
 
     data_set['entrez_gene_id'] = xr.DataArray(
         data=np.array(annot['EntrezGene ID'].fillna(-1).replace('', -1),
-                      dtype='int32'),
+                      dtype='int64'),
         dims=('gene',),
     )
     data_set['entrez_gene_id'].encoding['_FillValue'] = -1

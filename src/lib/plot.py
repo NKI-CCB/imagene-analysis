@@ -61,7 +61,8 @@ def _infer_set_ticklabels(ticklabels):
 
 
 @_autoplot
-def heatmap(x, y=None, z=None, *, xticklabels=None, yticklabels=None,
+def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
+            yticklabels=None,
             xlabel=None, ylabel=None, zlabel=None, zlim=None,
             row_dendrogram=False, row_dist_metric='euclidean',
             row_cluster_method='average', col_dendrogram=False,
@@ -89,12 +90,17 @@ def heatmap(x, y=None, z=None, *, xticklabels=None, yticklabels=None,
                 yticklabels = x.coords[x.dims[0]].values
         else:
             Z = np.array(x)
+        if mask is not None:
+            Zmask = np.array(mask)
+        else:
+            Zmask = np.zeros(Z.shape, dtype='bool')
     else:
         # Only matrix is supported for now. We should also support DataFrames
         # in tidy format, and separate x, y and z values.
         return NotImplemented()
 
-    Zo = Z
+    Zo = Z.copy()
+    Zo[Zmask] = np.nan
     row_order = None
     if row_dendrogram:
         row_dist = scipy_sd.pdist(Z, row_dist_metric)
