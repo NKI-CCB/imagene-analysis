@@ -27,12 +27,7 @@ data/raw/mri-features.xlsx:
 	mkdir -p data/raw
 	. ./.env; echo "user = $$BEEHUB_USERNAME:$$BEEHUB_PASSWORD" | curl -K - https://beehub.nl/home/tychobismeijer/Imagene/mri/2016-03-31-Tumor_Parenchym_Features_variablenamesupdated.xlsx -o $@
 
-#----------------
-# Annotation Data
 
-# Ensembl Annotation
-data/annotation/ensembl_annotation.tsv: src/data/query_ensembl_reference.py
-	$(PYTHON) $< $@
 
 #--------------
 # External Data
@@ -40,6 +35,10 @@ data/annotation/ensembl_annotation.tsv: src/data/query_ensembl_reference.py
 # Sparse-factor analysis results on TCGA Breast
 data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5:
 	. ./.env; echo "user = $$BEEHUB_USERNAME:$$BEEHUB_PASSWORD" | curl -K - https://beehub.nl/home/tychobismeijer/Imagene/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5 -o $@
+
+# Ensembl Annotation
+data/external/ensembl_annotation.tsv: src/data/query_ensembl_reference.py
+	$(PYTHON) $< $@
 
 #---------------
 # Processed Data
@@ -50,7 +49,7 @@ data/processed/mri-features.nc: src/data/process_mri.py data/raw/mri-features.xl
 	$(PYTHON) $^ $@
 
 # Gene Expression, add annotation and log2 CPM
-data/processed/gene-expression.nc: src/data/process_gene_expression.py data/raw/gene-expression.nc data/raw/sample-tracking.tsv data/annotation/ensembl_annotation.tsv
+data/processed/gene-expression.nc: src/data/process_gene_expression.py data/raw/gene-expression.nc data/raw/sample-tracking.tsv data/external/ensembl_annotation.tsv
 	mkdir -p data/interim
 	$(PYTHON) $^ $@
 
