@@ -156,7 +156,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
 # http://matplotlib.org/examples/api/histogram_path_demo.html
 @_autoplot
 def hist(x, bins='sturges', *, range=None, weights=None, density=False,
-         facecolor='white', edgecolor='black',
+         facecolor='white', edgecolor='black', title=None,
          xlabel=None, ylabel=None,
          ax):
     n, bins = np.histogram(x, bins=bins, range=range, weights=weights,
@@ -200,6 +200,10 @@ def hist(x, bins='sturges', *, range=None, weights=None, density=False,
     ax.spines['top'].set_visible(False)
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
+    if title is None:
+        title = "Histogram"
+    if title:
+        ax.set_title(title)
 
 
 def interpolate_quantiles(x, n):
@@ -208,7 +212,7 @@ def interpolate_quantiles(x, n):
 
 
 @_autoplot
-def qqplot(x, y, *, ax, diagonal=False, xlabel=None, ylabel=None):
+def qqplot(x, y, *, ax, diagonal=False, xlabel=None, ylabel=None, title=None):
 
     # Arguments
     if xlabel is None:
@@ -238,3 +242,57 @@ def qqplot(x, y, *, ax, diagonal=False, xlabel=None, ylabel=None):
         ax.set_xlabel(xlabel)
     if ylabel:
         ax.set_ylabel(ylabel)
+    if title is None:
+        title = "Q-Q plot"
+    if title:
+        ax.set_title(title)
+
+
+@_autoplot
+def boxplot(x, y, *, ax, xlabel=None, ylabel=None, title=None):
+    if hasattr(x, 'shape') and len(x.shape) == 1:
+        # x is a vector
+        if isinstance(x, xr.DataArray):
+            if xlabel is None:
+                xlabel = x.name
+            x = x.values
+        else:
+            x = np.asarray(x)
+    else:
+        # Only vector-vector is implemented for now.
+        return NotImplemented()
+    if hasattr(y, 'shape') and len(y.shape) == 1:
+        # y is a vector
+        if isinstance(y, xr.DataArray):
+            if ylabel is None:
+                ylabel = y.name
+            y = y.values
+        else:
+            y = np.asarray(y)
+    else:
+        # Only vector-vector is implemented for now.
+        return NotImplemented()
+
+    x_split = dict()
+    for cat in set(x):
+        if cat is np.nan:
+            continue
+        x_split[cat] = y[x == cat]
+    categories = list(x_split.keys())
+
+    ax.boxplot([x_split[c] for c in categories], labels=categories)
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+    if title is None:
+        title = "Box plot"
+    if title:
+        ax.set_title(title)

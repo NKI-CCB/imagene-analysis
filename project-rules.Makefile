@@ -27,6 +27,10 @@ data/raw/mri-features.xlsx:
 	mkdir -p data/raw
 	. ./.env; echo "user = $$BEEHUB_USERNAME:$$BEEHUB_PASSWORD" | curl -K - https://beehub.nl/home/tychobismeijer/Imagene/mri/2016-03-31-Tumor_Parenchym_Features_variablenamesupdated.xlsx -o $@
 
+# Clinical Data
+data/raw/imagene_clinical.tsv:
+	mkdir -p data/raw
+	. ./.env; echo "user = $$BEEHUB_USERNAME:$$BEEHUB_PASSWORD" | curl -K - https://beehub.nl/home/tychobismeijer/Imagene/clinical/2016-01-19-imagene_clinical.tsv -o $@
 
 
 #--------------
