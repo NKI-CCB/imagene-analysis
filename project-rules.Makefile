@@ -27,6 +27,10 @@ data/raw/mri-features.xlsx:
 	mkdir -p data/raw
 	. ./.env; echo "user = $$BEEHUB_USERNAME:$$BEEHUB_PASSWORD" | curl -K - https://beehub.nl/home/tychobismeijer/Imagene/mri/2016-03-31-Tumor_Parenchym_Features_variablenamesupdated.xlsx -o $@
 
+data/raw/mri-er-probs.xlsx:
+	mkdir -p data/raw
+	. ./.env; echo "user = $$BEEHUB_USERNAME:$$BEEHUB_PASSWORD" | curl -K - https://beehub.nl/home/tychobismeijer/Imagene/mri/2017-02-22-er-probs.xlsx -o $@
+
 # Clinical Data
 data/raw/imagene_clinical.tsv:
 	mkdir -p data/raw
@@ -52,7 +56,11 @@ data/external/ensembl_annotation.tsv: src/data/query_ensembl_reference.py
 # MRI Features
 data/processed/mri-features.nc: src/data/process_mri.py data/raw/mri-features.xlsx
 	mkdir -p data/processed/
-	$(PYTHON) $^ $@
+	$(PYTHON) $^ $@ --study-nr-col='MARGINSstudyNr'
+
+data/processed/mri-er-probs.nc: src/data/process_mri.py data/raw/mri-er-probs.xlsx
+	mkdir -p data/processed/
+	$(PYTHON) $^ $@ --study-nr-col='StuID'
 
 # Gene Expression, add annotation and log2 CPM
 data/processed/gene-expression.nc: src/data/process_gene_expression.py data/raw/gene-expression.nc data/raw/sample-tracking.tsv data/external/ensembl_annotation.tsv
