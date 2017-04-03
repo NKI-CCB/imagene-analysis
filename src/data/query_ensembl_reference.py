@@ -1,4 +1,5 @@
 import argparse
+import click
 from pathlib import Path
 
 import requests
@@ -44,7 +45,11 @@ if __name__ == '__main__':
     r = requests.get(biomart_url, params={'query': query_xml}, stream=True)
     r.raise_for_status()
 
-    with args.out.open('wb') as o:
+    r_length = r.headers.get('content-length')
+    if r_length is not None:
+        r_length = int(r_length)
 
-        for chunk in r.iter_content(2**16):
-            o.write(chunk)
+    with args.out.open('wb') as file:
+        with click.progressbar(r.iter_content(1024), length=r_length) as bar:
+            for chunk in bar:
+                file.write(chunk)

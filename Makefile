@@ -9,7 +9,7 @@ R=Rscript
 # COMMANDS                                                                      #
 #################################################################################
 
-all: venv requirements data models
+all: venv requirements all_data all_models
 .PHONY: all
 
 # Environment
@@ -59,4 +59,4 @@ help:
 
 Makefile: ;
 %: requirements
-	$(ACTIVATE_ENV); $(MAKE) -f project-rules.Makefile $@
+	$(ACTIVATE_ENV); snakemake --snakefile project-rules.Snakefile $@

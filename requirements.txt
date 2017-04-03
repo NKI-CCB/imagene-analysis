@@ -1,4 +1,8 @@
 pip
+snakemake~=3.11
+pyyaml~=3.12
+python-dotenv==0.6.*
+click~=6.7
 Sphinx~=1.5
 coverage~=4.3
 flake8==3.2.*

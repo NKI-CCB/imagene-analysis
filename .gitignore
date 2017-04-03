@@ -67,6 +67,9 @@ target/
 # Pycharm
 .idea
 
+# Snakemake
+.snakemake/
+
 # Jupyter NB Checkpoints
 .ipynb_checkpoints/
 

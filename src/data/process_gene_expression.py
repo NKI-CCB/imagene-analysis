@@ -118,9 +118,10 @@ if __name__ == "__main__":
                 .isoformat())
     data_set.attrs['history'] = (
         "{date} process_gene_expression.py Provide extra sample and gene "
-        "annotation\n" +
+        "annotation\n"
+        .format(date=time_str) +
         data_set.attrs['history']
     )
-    data_set['date_metadata_modified'] = time_str
+    data_set.attrs['date_metadata_modified'] = time_str
 
     data_set.to_netcdf(str(args.out))
