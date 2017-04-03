@@ -75,3 +75,4 @@ target/
 
 # exclude results from source control
 /models/
+/analyses/
