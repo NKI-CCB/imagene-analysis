@@ -1,8 +1,8 @@
 import argparse
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-import xarray as xr
 
 
 def parse_args():
@@ -28,7 +28,7 @@ def read_mri_xlsx(mri_path, study_nr_col):
         mri_df = pd.read_excel(f)
 
     if study_nr_col not in mri_df.columns:
-        raise Exception('Could not find margins study number column')
+        raise Exception("Could not find margins study number column")
 
     mri_df = mri_df.rename(columns={study_nr_col: 'patient'})
     mri_df = mri_df.set_index('patient')
@@ -43,4 +43,15 @@ if __name__ == "__main__":
     args = parse_args()
 
     data_set = read_mri_xlsx(args.mri_data, args.study_nr_col)
+    data_set.attrs['title'] = ("MRI features from Margins of samples with "
+                               "gene expression data from Imagene")
+
+    time_str = (datetime.utcnow()
+                .replace(microsecond=0, tzinfo=timezone.utc)
+                .isoformat())
+    data_set.attrs['history'] = (
+        "{time} Converted with process_mri.py from {fn}"
+        .format(time=time_str, fn=args.out)
+    )
+
     data_set.to_netcdf(str(args.out))

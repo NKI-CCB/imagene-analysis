@@ -1,5 +1,6 @@
 import argparse
 import csv
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -99,7 +100,6 @@ def annotate_genes(data_set, annot_path):
     return data_set
 
 
-
 if __name__ == "__main__":
     args = parse_args()
 
@@ -112,5 +112,15 @@ if __name__ == "__main__":
     data_set = data_set.reset_coords(['sample'])
 
     data_set = annotate_genes(data_set, args.gene_annotation)
+
+    time_str = (datetime.utcnow()
+                .replace(microsecond=0, tzinfo=timezone.utc)
+                .isoformat())
+    data_set.attrs['history'] = (
+        "{date} process_gene_expression.py Provide extra sample and gene "
+        "annotation\n" +
+        data_set.attrs['history']
+    )
+    data_set['date_metadata_modified'] = time_str
 
     data_set.to_netcdf(str(args.out))
