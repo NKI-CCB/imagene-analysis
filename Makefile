@@ -2,7 +2,8 @@
 # GLOBALS                                                                       #
 #################################################################################
 
-PYTHON = python3
+PYTHON=python3
+R=Rscript
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -15,11 +16,16 @@ all: venv requirements data models
 
 venv:
 	$(PYTHON) -m venv venv
+	mkdir -p venv/lib/R/site-library
+	echo 'R_LIBS_SITE="$$VIRTUAL_ENV/lib/R/site-library"' >> venv/bin/activate
+	echo 'export R_LIBS_SITE' >> venv/bin/activate
 
 ACTIVATE_ENV=. venv/bin/activate
 
 requirements: venv
-	$(ACTIVATE_ENV); pip install -q -r requirements.txt
+	$(ACTIVATE_ENV); \
+	pip install -q -r requirements.txt; \
+	${R} requirements.R
 .PHONY: requirements
 
 update-requirements: venv
