@@ -51,20 +51,20 @@ def counts_to_log2_cpm(counts):
     return cpm
 
 
-def map_sample_to_patient(samples, sample_tracking_path):
+def map_sample_to_case(samples, sample_tracking_path):
     with sample_tracking_path.open() as f:
         reader = csv.DictReader(f, delimiter='\t')
-        sample_patient_map = {l['rna_sample']: l['margins_patient']
-                              for l in reader}
+        sample_case_map = {l['rna_sample']: l['margins_patient']
+                           for l in reader}
 
-    patients = [sample_patient_map[s] for s in samples.values]
-    patients = xr.DataArray(
-        data=np.array(patients, dtype='int64'),
+    cases = [sample_case_map[s] for s in samples.values]
+    cases = xr.DataArray(
+        data=np.array(cases, dtype='int64'),
         coords=samples.coords,
         dims=samples.dims
     )
-    patients.attrs['long_name'] = 'MARGINS Study Number'
-    return patients
+    cases.attrs['long_name'] = 'MARGINS Study Number'
+    return cases
 
 
 def merge_vals(v):
@@ -106,9 +106,9 @@ if __name__ == "__main__":
     data_set = xr.open_dataset(str(args.gene_expression_data))
 
     data_set['log2_cpm'] = counts_to_log2_cpm(data_set['read_count'])
-    data_set['patient'] = map_sample_to_patient(data_set['sample'],
-                                                args.sample_tracking)
-    data_set = data_set.swap_dims({'sample': 'patient'})
+    data_set['case'] = map_sample_to_case(data_set['sample'],
+                                          args.sample_tracking)
+    data_set = data_set.swap_dims({'sample': 'case'})
     data_set = data_set.reset_coords(['sample'])
 
     data_set = annotate_genes(data_set, args.gene_annotation)

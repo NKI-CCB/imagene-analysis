@@ -100,6 +100,25 @@ rule download_ensembl_annotation:
         "{config[python]} {input.script} {output}"
 
 
+rule download_msigdb:
+    output:
+        "data/external/msigdb/msigdb_v5.2_files_to_download_locally.zip"
+    message:
+        "Please download msigdb_v5.2_files_to_download_locally.zip from "
+        "http://software.broadinstitute.org/gsea/downloads.jsp#msigdb "
+        "under Archived Releases and place it into data/external/msigdb."
+
+rule unzip_msigdb:
+    input:
+        "data/external/msigdb/msigdb_v5.2_files_to_download_locally.zip"
+    output:
+        "data/external/msigdb/{gene_set}.v5.2.{gene_ids}.gmt"
+    shell:
+        "unzip -p {input} "
+        "msigdb_v5.2_files_to_download_locally/msigdb_v5.2_GMTs/"
+        "{wildcards.gene_set}.v5.2.{wildcards.gene_ids}.gmt > {output}"
+
+
 #-------------
 # Process Data
 
@@ -146,3 +165,21 @@ rule apply_tcga_sfa:
     shell:
         "{config[python]} {input.script} {input.gexp} {input.sfa_tcga} "
         "{output}"
+
+########################################################################
+# ANALYSIS                                                             #
+########################################################################
+
+rule analyses_gene_sets:
+    input:
+        script="src/analysis/analyse-gene-set-enrichment.R",
+        gexp="data/processed/gene-expression.nc",
+        mri="data/processed/mri-features.nc",
+        gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
+    output:
+        "analyses/gsea/{gene_set}_{abs}.Rds",
+    shell:
+        "mkdir -p analyses/gsea; "
+        "{config[r]} {input.script} {input.gexp} {input.mri} "
+        "{input.gene_sets} {output} --abs {wildcards.abs} --threads 4 "
+        "--perms 10000"

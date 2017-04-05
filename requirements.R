@@ -4,11 +4,14 @@ stopifnot(substr(version['minor'], 1, 1) == '3')
 
 cran_requirements = c(
     'tidyverse',
+    'optparse',
     'devtools',
-    'ggplot2')
+    'ggplot2',
+    'ncdf4')
 
 bioc_requirements = c(
-    )
+    'edgeR',
+    'limma')
 
 github_requirements = c(
     ggsea='NKI-CCB/ggsea'

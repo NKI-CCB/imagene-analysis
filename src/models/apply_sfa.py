@@ -54,7 +54,7 @@ def read_coefficients(sfa_model_path):
 
 
 def sel_most_var_gene(ds):
-    return ds['gene'][np.argmax(ds['log2_cpm'].var('patient').values)]
+    return ds['gene'][np.argmax(ds['log2_cpm'].var('case').values)]
 
 
 def read_gene_expression(gene_expression_path):
@@ -65,7 +65,7 @@ def read_gene_expression(gene_expression_path):
     # There are Entrez gene ids with multiple Ensembl genes. Most of these
     # enseml genes are not expressed.
     gexp_ds = gexp_ds.sel(
-        gene=gexp_ds['read_count'].mean('patient').values > 1.0
+        gene=gexp_ds['read_count'].mean('case').values > 1.0
     )
     # If there are multiple expressed, select the most variable
     sel_genes = gexp_ds.groupby('entrez_gene_id').apply(sel_most_var_gene)
@@ -83,7 +83,7 @@ def apply_sfa(gene_expression, coefficients):
     gexp = gene_expression['log2_cpm']
     coefficients = coefficients.reindex(entrez_gene_id=shared_genes)
 
-    X = np.array(gexp.transpose('entrez_gene_id', 'patient').values)
+    X = np.array(gexp.transpose('entrez_gene_id', 'case').values)
     X = X - np.mean(X, 1, keepdims=True)
     B = np.array(coefficients.transpose('entrez_gene_id', 'factor').values)
 
@@ -93,9 +93,9 @@ def apply_sfa(gene_expression, coefficients):
 
     return xr.DataArray(
         data=Z,
-        dims=('factor', 'patient'),
+        dims=('factor', 'case'),
         coords={'factor': coefficients.coords['factor'],
-                'patient': gene_expression.coords['patient']},
+                'case': gene_expression.coords['case']},
     )
 
 

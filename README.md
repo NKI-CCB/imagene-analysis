@@ -1,5 +1,5 @@
-mri-rnaseq-integration
-==============================
+Integration of MRI and RNAseq data in the Imagene Project
+=========================================================
 
 Integration of MRI and RNAseq data of the Imagene project.
 

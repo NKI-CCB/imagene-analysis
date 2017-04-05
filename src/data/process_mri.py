@@ -30,11 +30,11 @@ def read_mri_xlsx(mri_path, study_nr_col):
     if study_nr_col not in mri_df.columns:
         raise Exception("Could not find margins study number column")
 
-    mri_df = mri_df.rename(columns={study_nr_col: 'patient'})
-    mri_df = mri_df.set_index('patient')
+    mri_df = mri_df.rename(columns={study_nr_col: 'case'})
+    mri_df = mri_df.set_index('case')
 
     mri_ds = mri_df.to_xarray()
-    mri_ds['patient'].attrs['long_name'] = "MARGINS Study Number"
+    mri_ds['case'].attrs['long_name'] = "MARGINS Study Number"
 
     return mri_ds
 
