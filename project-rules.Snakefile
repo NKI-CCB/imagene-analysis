@@ -170,16 +170,27 @@ rule apply_tcga_sfa:
 # ANALYSIS                                                             #
 ########################################################################
 
-rule analyses_gene_sets:
+rule analyse_gene_sets:
     input:
         script="src/analysis/analyse-gene-set-enrichment.R",
         gexp="data/processed/gene-expression.nc",
         mri="data/processed/mri-features.nc",
         gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
     output:
-        "analyses/gsea/{gene_set}_{abs}.Rds",
+        protected("analyses/gsea/{gene_set}_{abs}.Rds"),
+    threads:
+        16
     shell:
         "mkdir -p analyses/gsea; "
         "{config[r]} {input.script} {input.gexp} {input.mri} "
-        "{input.gene_sets} {output} --abs {wildcards.abs} --threads 4 "
+        "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
         "--perms 10000"
+
+rule gene_set_analysis_to_netcdf:
+    input:
+        script="src/analysis/gsea-rds-to-nc.R",
+        rds="analyses/gsea/{name}.Rds",
+    output:
+        "analyses/gsea/{name}.nc",
+    shell:
+        "{config[r]} {input.script} {input.rds} {output}"

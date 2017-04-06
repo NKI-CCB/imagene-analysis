@@ -116,11 +116,10 @@ parse_args <- function() {
 
 main <- function() {
     args <- parse_args()
-    print(args)
 
     if (args$threads > 1) {
         library(doMC)
-        registerDoMC(n_threads)
+        registerDoMC(args$threads)
     }
 
     gexp <- read_gexp(args$gene_expression)
