@@ -1,0 +1,66 @@
+---
+title: Gene Set Enrichment Analysis of CAD features
+author: Tycho Bismeijer
+date: 2017-04-06
+---
+
+## Setup ## {.collapsed}
+
+Load libraries.
+```{python import_libs}
+import sys
+
+from IPython.display import display, Markdown
+import numpy as np
+import pandas as pd
+from tabulate import tabulate
+import xarray as xr
+
+sys.path.append('../src/lib/')
+import plot
+```
+
+```{python setup-matplotlib}
+import matplotlib
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Alegreya Sans']
+```
+
+A utility function to display tables.
+```{python util_funcs}
+def display_table(t):
+    display(Markdown(
+        '<div class="datatable">' +
+        tabulate(t, headers='keys') +
+        "\n\n</div>"
+    ))
+```
+
+Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
+
+```{python load-gsea}
+ds = xr.open_dataset("../analyses/gsea/h.all_T.nc")
+ds['mri_feature'] = [s.decode() for s in ds['mri_feature'].values]
+ds['gene_set'] = [s.decode() for s in ds['gene_set'].values]
+display(ds)
+```
+
+## Results ##
+
+```{python es-heatmap}
+plot_ds = ds.copy()
+plot_ds['significance_mask'] = ds['fdr'] > 0.25
+plot_ds = plot_ds.sel(
+    gene_set=np.logical_not(plot_ds['significance_mask'])
+             .sum('mri_feature') > 0,
+)
+with plot.subplots(1, 1) as (fig, ax):
+    plot.heatmap(plot_ds['nes'], mask=plot_ds['significance_mask'], ax=ax)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+```
+
+```{python es-table}
+df = ds.to_dataframe()
+df.reset_index(level=0, inplace=True)
+display_table(df.loc[df['fdr'] < 0.25])
+```
