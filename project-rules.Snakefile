@@ -194,3 +194,43 @@ rule gene_set_analysis_to_netcdf:
         "analyses/gsea/{name}.nc",
     shell:
         "{config[r]} {input.script} {input.rds} {output}"
+
+
+########################################################################
+# REPORTS                                                              #
+########################################################################
+
+report_deps = {
+    "gsea": ["analyses/gsea/h.all_T.nc", "src/lib/plot.py"],
+}
+
+rule weave_report:
+    input:
+        lambda w: report_deps.get(w['report'], []),
+        pmd="reports/{report}.pmd",
+    output:
+        "reports/{report}.md",
+    shell:
+        "{config[pweave]} "
+        "--kernel=python3 "
+        "-f pandoc "
+        "--input-format=markdown "
+        "{input.pmd} -o {output}"
+
+rule markdown_to_html:
+    input:
+        "reports/pandoc-template.html",
+        md="reports/{report}.md",
+    output:
+        "reports/{report}.html"
+    shell:
+        "{config[pandoc]} "
+        "-t html5 "
+        "--smart "
+        "--standalone "
+        "--mathjax "
+        "--template=reports/pandoc-template.html "
+        "--toc "
+        "--highlight-style pygments "
+        "--section-divs "
+        "{input.md} -o {output}"

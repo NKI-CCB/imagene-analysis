@@ -97,7 +97,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
     else:
         # Only matrix is supported for now. We should also support DataFrames
         # in tidy format, and separate x, y and z values.
-        return NotImplemented()
+        raise NotImplementedError()
 
     Zo = Z.copy()
     Zo[Zmask] = np.nan
@@ -117,7 +117,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
     if zlim is None:
         zlim = (np.min(Z), np.max(Z))
 
-    if zlim[0] < 0.0 and zlim[1] > 1:
+    if (zlim[0] < 0.0) and (zlim[1] > 0.0):
         # Automatic symmetric colormap
         zlim_p = max((-zlim[0], zlim[1]))
         zlim = (-zlim_p, zlim_p)

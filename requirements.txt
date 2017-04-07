@@ -18,3 +18,5 @@ ipython~=5.1
 ipykernel
 scipy~=0.18
 scikit-learn~=0.18
+pweave~=0.30a1
+tabulate

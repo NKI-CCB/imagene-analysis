@@ -1,2 +1,4 @@
 python: python3
 r: Rscript
+pweave: pweave
+pandoc: pandoc

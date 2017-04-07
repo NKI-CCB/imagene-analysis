@@ -1,0 +1,34 @@
+pre {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+pre code {
+  display: block;
+  padding: 0.5em;
+}
+table.dataTable tbody tr {
+  background-color: inherit;
+}
+.datatable { 
+  width: 100%;
+  clear: both;
+}
+section h2:after {
+  font-family: octicons;
+  font-style: normal;
+  font-size: 20px;
+  vertical-align: middle;
+  display: inline-block;
+  text-decoration: none;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  content: "\00a0\f0ca";
+}
+section.collapsed h2:after {
+  content: "\00a0\f05d";
+}
