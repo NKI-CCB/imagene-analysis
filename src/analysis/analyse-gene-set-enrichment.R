@@ -114,8 +114,7 @@ parse_args <- function() {
     c(as.list(arguments$args), arguments$options)
 }
 
-main <- function() {
-    args <- parse_args()
+main <- function(args) {
 
     if (args$threads > 1) {
         library(doMC)
@@ -137,4 +136,5 @@ main <- function() {
 
 }
 
-main()
+args <- parse_args()
+main(args)
