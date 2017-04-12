@@ -1,12 +1,13 @@
 ---
 title: Gene Set Enrichment Analysis of CAD features
 author: Tycho Bismeijer
-date: 2017-04-06
+date: 2017-04-12
 ---
 
 ## Setup ## {.collapsed}
 
 Load libraries.
+
 ```{python import_libs}
 import sys
 
@@ -20,13 +21,17 @@ sys.path.append('../src/lib/')
 import plot
 ```
 
+Setup style of plots.
+
 ```{python setup-matplotlib}
 import matplotlib
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = ['Alegreya Sans']
+matplotlib.rcParams['font.weight'] = 'regular'
 ```
 
-A utility function to display tables.
+A utility function to display tables with [DataTables](https://datatables.net).
+
 ```{python util_funcs}
 def display_table(t):
     display(Markdown(
@@ -39,28 +44,63 @@ def display_table(t):
 Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 
 ```{python load-gsea}
-ds = xr.open_dataset("../analyses/gsea/h.all_T.nc")
-ds['mri_feature'] = [s.decode() for s in ds['mri_feature'].values]
-ds['gene_set'] = [s.decode() for s in ds['gene_set'].values]
-display(ds)
+def load_gsea_ds(fn):
+    ds = xr.open_dataset(fn)
+    ds['mri_feature'] = [s.decode() for s in ds['mri_feature'].values]
+    ds['mri_feature'] = [" ".join(s.split('_')).title()
+                         for s in ds['mri_feature'].values]
+    ds['gene_set_code'] = ('gene_set',
+                           [s.decode() for s in ds['gene_set'].values])
+    ds['gene_set'] = [" ".join(s.split('_')).title()
+                      for s in ds['gene_set_code'].values]
+    return ds
+df_h = load_gsea_ds("../analyses/gsea/h.all_T.nc")
+df_cgp = load_gsea_ds("../analyses/gsea/c2.cgp_F.nc")
+```
+
+A function to plot a heatmap with normalized enrichment statistics (NES) that
+are significant.
+
+```{python es-heatmap-fun}
+def plot_ds(ds, fdr, le_prop=0.0):
+    ds = ds.copy()
+    ds['significance_mask'] = (ds['fdr'] > fdr) | (ds['le_prop'] < le_prop)
+    ds = ds.sel(
+        gene_set=np.logical_not(ds['significance_mask'])
+                 .sum('mri_feature') > 0,
+    )
+    with plot.subplots(1, 1, figsize=(8, 5.5), dpi=192) as (fig, ax):
+        plot.heatmap(ds['nes'], mask=ds['significance_mask'], ax=ax)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+```
+
+A function to show significant pathway enrichments in a table.
+
+```{python es-table-fun}
+def table_ds(ds, fdr, le_prop=0.0):
+    df = ds.to_dataframe()
+    df.reset_index(level=0, inplace=True)
+    display_table(df.loc[(df['fdr'] < fdr) & (df['le_prop'] > le_prop)])
 ```
 
 ## Results ##
 
-```{python es-heatmap}
-plot_ds = ds.copy()
-plot_ds['significance_mask'] = ds['fdr'] > 0.25
-plot_ds = plot_ds.sel(
-    gene_set=np.logical_not(plot_ds['significance_mask'])
-             .sum('mri_feature') > 0,
-)
-with plot.subplots(1, 1) as (fig, ax):
-    plot.heatmap(plot_ds['nes'], mask=plot_ds['significance_mask'], ax=ax)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+Hallmarks from MSigDB.
+
+```{python hallmarks-es-plot}
+plot_ds(df_h, fdr=0.25)
 ```
 
-```{python es-table}
-df = ds.to_dataframe()
-df.reset_index(level=0, inplace=True)
-display_table(df.loc[df['fdr'] < 0.25])
+```{python hallmarks-table}
+table_ds(df_h, fdr=0.25)
+```
+
+Signatures of chemical and genetic perturbations from MSigDB.
+
+```{python cgp-plot}
+plot_ds(df_cgp, fdr=0.25, le_prop=0.8)
+```
+
+```{python cgp-table}
+table_ds(df_cgp, fdr=0.25)
 ```

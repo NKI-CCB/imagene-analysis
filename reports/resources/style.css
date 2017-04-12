@@ -32,3 +32,6 @@ section h2:after {
 section.collapsed h2:after {
   content: "\00a0\f05d";
 }
+img {
+  width: 770px
+}
