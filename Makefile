@@ -59,4 +59,4 @@ help:
 
 Makefile: ;
 %: requirements
-	$(ACTIVATE_ENV); snakemake --snakefile project-rules.Snakefile $@
+	$(ACTIVATE_ENV); snakemake $@
