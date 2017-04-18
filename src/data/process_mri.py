@@ -50,8 +50,8 @@ if __name__ == "__main__":
                 .replace(microsecond=0, tzinfo=timezone.utc)
                 .isoformat())
     data_set.attrs['history'] = (
-        "{time} Converted with process_mri.py from {fn}"
-        .format(time=time_str, fn=args.out)
+        "{time} process_mri.py Converted from {fn}."
+        .format(time=time_str, fn=args.mri_data)
     )
 
     data_set.to_netcdf(str(args.out))

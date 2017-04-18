@@ -67,7 +67,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
             row_dendrogram=False, row_dist_metric='euclidean',
             row_cluster_method='average', col_dendrogram=False,
             col_dist_metric='euclidean', col_cluster_method='average',
-            ax, cmap=None):
+            ax, cmap=None, symmetric=False):
     if row_dendrogram or col_dendrogram:
         import scipy.cluster.hierarchy as scipy_ch
         import scipy.spatial.distance as scipy_sd
@@ -99,23 +99,28 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         # in tidy format, and separate x, y and z values.
         raise NotImplementedError()
 
-    Zo = Z.copy()
-    Zo[Zmask] = np.nan
     row_order = None
+    col_order = None
     if row_dendrogram:
         row_dist = scipy_sd.pdist(Z, row_dist_metric)
         row_linkage = scipy_ch.linkage(row_dist, row_cluster_method)
         row_order = scipy_ch.leaves_list(row_linkage)
-        Zo = Zo[row_order, :]
-    col_order = None
-    if col_dendrogram:
+        if symmetric:
+            col_order = row_order
+    if col_dendrogram and not symmetric:
         col_dist = scipy_sd.pdist(Z.T, col_dist_metric)
         col_linkage = scipy_ch.linkage(col_dist, col_cluster_method)
         col_order = scipy_ch.leaves_list(col_linkage)
+
+    Zo = Z.copy()
+    Zo[Zmask] = np.nan
+    if row_order is not None:
+        Zo = Zo[row_order, :]
+    if col_order is not None:
         Zo = Zo[:, col_order]
 
     if zlim is None:
-        zlim = (np.min(Z), np.max(Z))
+        zlim = (np.nanmin(Z), np.nanmax(Z))
 
     if (zlim[0] < 0.0) and (zlim[1] > 0.0):
         # Automatic symmetric colormap
@@ -130,18 +135,14 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
 
     xticklabels, set_xticklabels = _infer_set_ticklabels(xticklabels)
     if set_xticklabels:
-        if col_order is None:
-            ax.set_xticks(range(len(xticklabels)))
-        else:
-            ax.set_xticks(col_order)
-        ax.set_xticklabels(xticklabels)
+        ax.set_xticks(range(len(xticklabels)))
+        if col_order is not None:
+            ax.set_xticklabels([xticklabels[o] for o in col_order])
     yticklabels, set_yticklabels = _infer_set_ticklabels(yticklabels)
     if set_yticklabels:
-        if row_order is None:
-            ax.set_yticks(range(len(yticklabels)))
-        else:
-            ax.set_yticks(row_order)
-        ax.set_yticklabels(yticklabels)
+        ax.set_yticks(range(len(yticklabels)))
+        if row_order is not None:
+            ax.set_yticklabels([yticklabels[o] for o in row_order])
 
     if zlabel is not None:
         cbar.ax.set_ylabel(zlabel)

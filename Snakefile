@@ -145,6 +145,26 @@ rule process_gene_expression:
         "{config[python]} {input.script} {input.gexp} {input.sample_tracking} "
         "{input.gene_annot} {output}"
 
+########################################################################
+# FEATURES                                                             #
+########################################################################
+
+rule all_features:
+    input:
+        "data/processed/mri-features-reg-volume-lin.nc",
+        "data/processed/mri-features-reg-volume-sqrt.nc",
+        "data/processed/mri-features-reg-volume-cbrt.nc",
+        "data/processed/mri-features-reg-volume-lin.nc",
+
+rule regress_out_volume:
+    input:
+        script="src/features/regress_out_mri_var.py",
+        mri="data/processed/mri-features.nc",
+    output:
+        "data/processed/mri-features-reg-{var}-{trans}.nc"
+    shell:
+        "{config[python]} {input.script} {input.mri} {wildcards.var} "
+        "{output} --trans-{wildcards.trans}"
 
 ########################################################################
 # MODELS                                                               #
@@ -174,10 +194,10 @@ rule analyse_gene_sets:
     input:
         script="src/analysis/analyse-gene-set-enrichment.R",
         gexp="data/processed/gene-expression.nc",
-        mri="data/processed/mri-features.nc",
+        mri="data/processed/{mri}.nc",
         gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
     output:
-        protected("analyses/gsea/{gene_set}_{abs}.Rds"),
+        protected("analyses/gsea/{mri}_{gene_set}_{abs}.Rds"),
     threads:
         16
     shell:
