@@ -54,8 +54,10 @@ def _infer_set_ticklabels(ticklabels):
     if isinstance(ticklabels, str) and ticklabels == 'index':
         set_ticklabels = False  # Matplotlib sets them automatically
         ticklabels = None
+    elif ticklabels is not None:
+        set_ticklabels = True
     else:
-        set_ticklabels = ticklabels is not None
+        set_ticklabels = False
 
     return (ticklabels, set_ticklabels)
 
@@ -138,11 +140,15 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         ax.set_xticks(range(len(xticklabels)))
         if col_order is not None:
             ax.set_xticklabels([xticklabels[o] for o in col_order])
+        else:
+            ax.set_xticklabels(xticklabels)
     yticklabels, set_yticklabels = _infer_set_ticklabels(yticklabels)
     if set_yticklabels:
         ax.set_yticks(range(len(yticklabels)))
         if row_order is not None:
             ax.set_yticklabels([yticklabels[o] for o in row_order])
+        else:
+            ax.set_yticklabels(yticklabels)
 
     if zlabel is not None:
         cbar.ax.set_ylabel(zlabel)

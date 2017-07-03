@@ -54,8 +54,7 @@ def load_gsea_ds(fn):
     ds['gene_set'] = [" ".join(s.split('_')).title()
                       for s in ds['gene_set_code'].values]
     return ds
-df_h = load_gsea_ds("../analyses/gsea/h.all_T.nc")
-df_cgp = load_gsea_ds("../analyses/gsea/c2.cgp_F.nc")
+df_h = load_gsea_ds("../analyses/gsea/mri-features_h.all_T.nc")
 ```
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that
@@ -93,14 +92,4 @@ plot_ds(df_h, fdr=0.25)
 
 ```{python hallmarks-table}
 table_ds(df_h, fdr=0.25)
-```
-
-Signatures of chemical and genetic perturbations from MSigDB.
-
-```{python cgp-plot}
-plot_ds(df_cgp, fdr=0.25, le_prop=0.8)
-```
-
-```{python cgp-table}
-table_ds(df_cgp, fdr=0.25)
 ```
