@@ -151,20 +151,17 @@ rule process_gene_expression:
 
 rule all_features:
     input:
-        "data/processed/mri-features-reg-volume-lin.nc",
-        "data/processed/mri-features-reg-volume-sqrt.nc",
-        "data/processed/mri-features-reg-volume-cbrt.nc",
-        "data/processed/mri-features-reg-volume-lin.nc",
+        "data/processed/mri-features.nc",
+        "data/processed/mri-features-reg-volume.nc",
 
 rule regress_out_volume:
     input:
         script="src/features/regress_out_mri_var.py",
         mri="data/processed/mri-features.nc",
     output:
-        "data/processed/mri-features-reg-{var}-{trans}.nc"
+        "data/processed/mri-features-reg-volume.nc"
     shell:
-        "{config[python]} {input.script} {input.mri} {wildcards.var} "
-        "{output} --trans-{wildcards.trans}"
+        "{config[python]} {input.script} {input.mri} {output}"
 
 ########################################################################
 # MODELS                                                               #

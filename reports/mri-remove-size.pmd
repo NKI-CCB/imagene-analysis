@@ -1,0 +1,163 @@
+---
+title: Exploration to remove size from MRI CAD features
+author: Tycho Bismeijer
+date: 2017-07-03
+---
+
+## Setup ## {.collapsed}
+
+Load libraries.
+
+```{python import_libs}
+from math import sqrt, ceil
+import sys
+
+from IPython.display import display, Markdown
+import numpy as np
+import scipy.stats
+import sklearn.decomposition
+import xarray as xr
+
+sys.path.append('../src/lib/')
+import plot
+```
+
+Setup style of plots.
+
+```{python setup-matplotlib}
+import matplotlib
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Alegreya Sans']
+matplotlib.rcParams['font.weight'] = 'regular'
+matplotlib.rcParams['figure.dpi'] = 300
+```
+
+```{python load-mri}
+mri_ds = xr.open_dataset('../data/processed/mri-features.nc')
+del mri_ds['Comment']
+del mri_ds['MultiFocal']
+mri = mri_ds.to_array('cad_feature', 'mri_cad_features')
+mri_ds.close()
+mri = mri.isel(case=np.where(mri.isnull().sum('cad_feature') == 0)[0])
+mri = mri.transpose('case', 'cad_feature')
+print(mri)
+```
+
+## Only linear scale adjustment ##
+
+### PCA ###
+
+```{python fit-pca}
+pca = sklearn.decomposition.PCA(10)
+pca.fit((mri / mri.std('case')).values)
+```
+
+```{python heatmap-pca}
+plot.heatmap(
+    pca.components_.T,
+    xticklabels=[str(i+1) for i in range(pca.components_.shape[0])],
+    yticklabels=mri.cad_feature.values,
+)
+```
+
+```{python plot-pca-a}
+with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    for i in range(pca.components_.shape[1]):
+        ax.arrow(0, 0, pca.components_[0, i], pca.components_[1, i])
+        alength = sqrt(pca.components_[0, i]**2 + pca.components_[1, i]**2)
+        if alength > 0.25:
+            ax.text(pca.components_[0, i], pca.components_[1, i],
+                    mri['cad_feature'].values[i])
+```
+
+### Normal QQ-plots of MRI CAD features ###
+
+```{python qqplot-mri-features, evaluate=True}
+nf = len(mri['cad_feature'])
+nc = len(mri['case'])
+n_row = ceil(nf / 3)
+n_col = 3
+fs = (n_col*3, n_row*3)
+with plot.subplots(n_row, n_col, figsize=fs) as (fig, axs):
+    norm = scipy.stats.norm(0, 1)
+    q_norm = norm.ppf(np.linspace(1 / nc, 1 - (1 / nc), nc))
+    for i in range(nf):
+        row, col = divmod(i, n_col)
+        q_feature = mri.isel(cad_feature=i).values
+        plot.qqplot(
+            q_norm, q_feature,
+            ax=axs[row, col],
+            xlabel='Normal Q',
+            ylabel=str(mri['cad_feature'].values[i]) + " Q",
+            title=""
+        )
+    fig.tight_layout()
+```
+
+## Adjusted Scale ##
+
+```{python adjust-mri-features}
+mri_adj = xr.DataArray(np.full(mri.shape, np.nan), mri.coords, mri.dims)
+for feature in mri['cad_feature'].values:
+    if feature[0:3] == 'vol':
+        mri_adj.loc[:, feature] = np.cbrt(mri.loc[:, feature])
+    elif feature[0:3] == 'var':
+        mri_adj.loc[:, feature] = np.sqrt(mri.loc[:, feature])
+    else:
+        mri_adj.loc[:, feature] = mri.loc[:, feature]
+mri_adj
+```
+
+### Normal QQ-plots of MRI CAD features ###
+
+```{python qqplot-mri-features-adj, evaluate=True}
+nf = len(mri_adj['cad_feature'])
+nc = len(mri_adj['case'])
+n_row = ceil(nf / 3)
+n_col = 3
+fs = (n_col*3, n_row*3)
+with plot.subplots(n_row, n_col, figsize=fs) as (fig, axs):
+    norm = scipy.stats.norm(0, 1)
+    q_norm = norm.ppf(np.linspace(1 / nc, 1 - (1 / nc), nc))
+    for i in range(nf):
+        row, col = divmod(i, n_col)
+        q_feature = mri_adj.isel(cad_feature=i).values
+        plot.qqplot(
+            q_norm, q_feature,
+            ax=axs[row, col],
+            xlabel='Normal Q',
+            ylabel=str(mri_adj['cad_feature'].values[i]) + " Q",
+            title=""
+        )
+    fig.tight_layout()
+```
+
+### PCA ###
+
+```{python fit-pca-adj}
+pca_adj = sklearn.decomposition.PCA(10)
+pca_adj.fit((mri_adj / mri_adj.std('case')).values)
+```
+
+```{python heatmap-pca-adj}
+plot.heatmap(
+    pca_adj.components_.T,
+    xticklabels=[str(i+1) for i in range(pca_adj.components_.shape[0])],
+    yticklabels=mri_adj.cad_feature.values,
+)
+```
+
+```{python plot-pca-adj-a}
+with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    for i in range(pca_adj.components_.shape[1]):
+        ax.arrow(0, 0, pca_adj.components_[0, i], pca_adj.components_[1, i])
+        alength = sqrt(pca_adj.components_[0, i]**2 +
+                       pca_adj.components_[1, i]**2)
+        if alength > 0.25:
+            ax.text(pca_adj.components_[0, i], pca_adj.components_[1, i],
+                    mri_adj['cad_feature'].values[i])
+```

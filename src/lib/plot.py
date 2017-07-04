@@ -62,6 +62,24 @@ def _infer_set_ticklabels(ticklabels):
     return (ticklabels, set_ticklabels)
 
 
+def _annotate(ax, xlabel=None, ylabel=None, xscale='linear', yscale='linear',
+              xlim=None, ylim=None):
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+    if xscale is not None:
+        ax.set_xscale(xscale)
+    if yscale is not None:
+        ax.set_yscale(yscale)
+    if xlim is not None:
+        assert(len(xlim) == 2)
+        ax.set_xlim(xlim[0], xlim[1])
+    if ylim is not None:
+        assert(len(ylim) == 2)
+        ax.set_ylim(ylim[0], ylim[1])
+
+
 @_autoplot
 def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
             yticklabels=None,
@@ -303,3 +321,14 @@ def boxplot(x, y, *, ax, xlabel=None, ylabel=None, title=None):
         title = "Box plot"
     if title:
         ax.set_title(title)
+
+
+@_autoplot
+def scatter(x, y, *, ax, **kwargs):
+    ax.scatter(x, y, color='none', edgecolors='black')
+    _annotate(ax, **kwargs)
+
+    ax.spines['top'].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.spines['right'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
