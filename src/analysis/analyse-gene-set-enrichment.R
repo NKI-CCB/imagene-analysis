@@ -146,6 +146,8 @@ main <- function(args) {
     mri <- mri[, sel_samples]
     gexp$read_count <- gexp$read_count[, sel_samples]
 
+    mri = t(scale(t(mri)))
+
     res <- run_gsea(gexp$read_count, mri, gexp$entrez_gene, args$gene_sets,
                     nperm=args$perms, abs=args$abs, n_threads=args$threads)
     saveRDS(res, args$out)
