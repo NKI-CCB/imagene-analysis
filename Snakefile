@@ -196,7 +196,7 @@ rule analyse_gene_sets:
     output:
         protected("analyses/gsea/{mri}_{gene_set}_{abs}.Rds"),
     threads:
-        16
+        100
     shell:
         "mkdir -p analyses/gsea; "
         "{config[r]} {input.script} {input.gexp} {input.mri} "
@@ -218,7 +218,7 @@ rule gene_set_analysis_to_netcdf:
 ########################################################################
 
 report_deps = {
-    "gsea": ["analyses/gsea/h.all_T.nc", "src/lib/plot.py"],
+    "gsea": ["analyses/gsea/mri-features_h.all_T.nc", "src/lib/plot.py"],
 }
 
 rule weave_report:

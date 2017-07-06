@@ -32,6 +32,7 @@ def regress_out_mri_var(filename, out_filename):
             continue
         # Skip variables with other dimensions
         if var.dims[0] != expl_var.dims[0]:
+            print("Skipping {}".format(var.name))
             continue
         # Skip non numeric variables
         if not np.issubdtype(var.dtype, np.number):
@@ -44,6 +45,8 @@ def regress_out_mri_var(filename, out_filename):
         else:
             vv = var.values
         var.values = regress_out(vv, expl_var.values)
+
+    del data_set['volume']
 
     time_str = (datetime.utcnow()
                 .replace(microsecond=0, tzinfo=timezone.utc)
