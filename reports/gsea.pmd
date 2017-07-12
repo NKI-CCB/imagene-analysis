@@ -1,7 +1,7 @@
 ---
 title: Gene Set Enrichment Analysis of CAD features
 author: Tycho Bismeijer
-date: 2017-04-12
+date: 2017-06-06
 ---
 
 ## Setup ## {.collapsed}
@@ -28,6 +28,7 @@ import matplotlib
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = ['Alegreya Sans']
 matplotlib.rcParams['font.weight'] = 'regular'
+matplotlib.rcParams['figure.dpi'] = 300
 ```
 
 A utility function to display tables with [DataTables](https://datatables.net).
@@ -45,7 +46,7 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 
 ```{python load-gsea}
 def load_gsea_ds(fn):
-    ds = xr.open_dataset(fn)
+    ds = xr.open_dataset(fn).load()
     ds['mri_feature'] = [s.decode() for s in ds['mri_feature'].values]
     ds['mri_feature'] = [" ".join(s.split('_')).title()
                          for s in ds['mri_feature'].values]
@@ -55,6 +56,7 @@ def load_gsea_ds(fn):
                       for s in ds['gene_set_code'].values]
     return ds
 df_h = load_gsea_ds("../analyses/gsea/mri-features_h.all_T.nc")
+df_h_rv = load_gsea_ds("../analyses/gsea/mri-features-reg-volume_h.all_T.nc")
 ```
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that
@@ -68,8 +70,12 @@ def plot_ds(ds, fdr, le_prop=0.0):
         gene_set=np.logical_not(ds['significance_mask'])
                  .sum('mri_feature') > 0,
     )
-    with plot.subplots(1, 1, figsize=(8, 5.5), dpi=192) as (fig, ax):
-        plot.heatmap(ds['nes'], mask=ds['significance_mask'], ax=ax)
+    with plot.subplots(1, 1, figsize=(8, 5.5)) as (fig, ax):
+        plot.heatmap(
+            ds['nes'], mask=ds['significance_mask'],
+            zlim=[0, np.max(ds['nes'])], cmap='viridis',
+            ax=ax,
+        )
         ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
 ```
 
@@ -92,4 +98,16 @@ plot_ds(df_h, fdr=0.25)
 
 ```{python hallmarks-table}
 table_ds(df_h, fdr=0.25)
+```
+
+## Results---Volume regressed out ##
+
+Hallmarks from MSigDB.
+
+```{python hallmarks-es-plot-rv}
+plot_ds(df_h_rv, fdr=0.25)
+```
+
+```{python hallmarks-table-rv}
+table_ds(df_h_rv, fdr=0.25)
 ```
