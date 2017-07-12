@@ -10,7 +10,6 @@ Load libraries.
 
 ```{python import_libs}
 from math import sqrt, ceil
-import sys
 
 from IPython.display import display, Markdown
 import numpy as np
@@ -18,7 +17,6 @@ import scipy.stats
 import sklearn.decomposition
 import xarray as xr
 
-sys.path.append('../src/lib/')
 import plot
 ```
 

@@ -10,8 +10,12 @@ configfile: "config/snakemake.yaml"
 
 # Credentials that need top be kept out of source control
 dotenv.load_dotenv(str(Path("./.env").resolve()))
-beehub_username = os.environ.get("BEEHUB_USERNAME")
-beehub_password = os.environ.get("BEEHUB_PASSWORD")
+beehub_username = os.environ["BEEHUB_USERNAME"]
+beehub_password = os.environ["BEEHUB_PASSWORD"]
+
+# Other environment
+os.environ["PYTHONPATH"] = str(Path("./src/").resolve())
+
 
 ########################################################################
 # DATA                                                                 #
@@ -70,6 +74,15 @@ rule download_mri_features:
         download_beehub(
             "home/tychobismeijer/Imagene/mri/"
             "2016-03-31-Tumor_Parenchym_Features_variablenamesupdated.xlsx",
+            output[0]
+        )
+
+rule download_eigenbreasts:
+    output: "data/raw/eigenbreasts_{subset}.xlsx"
+    run:
+        download_beehub(
+            "home/tychobismeijer/Imagene/mri/2017-07-12-eigenbreasts/" +
+            str(Path(output[0]).name),
             output[0]
         )
 
@@ -255,3 +268,11 @@ rule markdown_to_html:
         "--highlight-style pygments "
         "--section-divs "
         "{input.md} -o {output}"
+
+rule run_notebook:
+    shell:
+        "jupyter notebook"
+
+rule run_ipython:
+    shell:
+        "ipython3"

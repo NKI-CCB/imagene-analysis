@@ -9,15 +9,12 @@ date: 2017-06-06
 Load libraries.
 
 ```{python import_libs}
-import sys
-
 from IPython.display import display, Markdown
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
 import xarray as xr
 
-sys.path.append('../src/lib/')
 import plot
 ```
 
