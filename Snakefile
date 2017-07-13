@@ -146,6 +146,27 @@ rule process_mri_features:
         "{config[python]} {input.script} {input.xlsx} {output} "
         "--study-nr-col=MARGINSstudyNr"
 
+rule process_eigenbreasts:
+    input:
+        "src/data/process_mri_eigenbreasts.py",
+        "data/raw/eigenbreasts_ipsi_ds2.xlsx",
+        "data/raw/eigenbreasts_ipsi_ds4.xlsx",
+        "data/raw/eigenbreasts_ipsi_ds8.xlsx",
+        "data/raw/eigenbreasts_ipsi_ds16.xlsx",
+        "data/raw/eigenbreasts_contra_ds2.xlsx",
+        "data/raw/eigenbreasts_contra_ds4.xlsx",
+        "data/raw/eigenbreasts_contra_ds8.xlsx",
+        "data/raw/eigenbreasts_contra_ds16.xlsx",
+        "data/raw/eigenbreasts_both_ds2.xlsx",
+        "data/raw/eigenbreasts_both_ds4.xlsx",
+        "data/raw/eigenbreasts_both_ds8.xlsx",
+        "data/raw/eigenbreasts_both_ds16.xlsx",
+    output:
+        "data/processed/mri-eigenbreasts.nc"
+    shell:
+        "{config[python]} {input} {output} "
+        "--study-nr-col=StudyID"
+
 rule process_gene_expression:
     input:
         script="src/data/process_gene_expression.py",
@@ -272,6 +293,10 @@ rule markdown_to_html:
 rule run_notebook:
     shell:
         "jupyter notebook"
+
+rule run_lab:
+    shell:
+        "jupyter lab"
 
 rule run_ipython:
     shell:
