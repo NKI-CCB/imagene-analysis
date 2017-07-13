@@ -255,7 +255,7 @@ report_deps = {
     "gsea": [
         "analyses/gsea/mri-features_h.all_T.nc",
         "analyses/gsea/mri-features-reg-volume_h.all_T.nc",
-        "src/lib/plot.py",
+        "src/plot.py",
     ],
 }
 

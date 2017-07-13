@@ -11,15 +11,14 @@ Load libraries.
 
 ```python
 from math import sqrt, ceil
-import sys
 
+import factor_rotation
 from IPython.display import display, Markdown
 import numpy as np
 import scipy.stats
 import sklearn.decomposition
 import xarray as xr
 
-sys.path.append('../src/lib/')
 import plot
 ```
 
@@ -77,11 +76,10 @@ Coordinates:
   * cad_feature  (cad_feature) <U35 'circularity' 'irregularity'
 'volume' ...
 Attributes:
-    title: MRI features from Margins of samples with gene expression
-data from Imagene
-    history: 2017-04-12T14:56:13+00:00 process_mri.py Converted from
-/home/tycho/Projects/Imagene/mri-rnaseq-integration/data/raw/mri-
-features.xlsx.
+    title:    MRI features from Margins of samples with gene
+expression data ...
+    history:  2017-04-12T14:56:13+00:00 process_mri.py Converted from
+/home/t...
 ```
 
 
@@ -92,12 +90,12 @@ features.xlsx.
 
 
 ```python
-pca = sklearn.decomposition.PCA(10)
+pca = sklearn.decomposition.PCA()
 pca.fit((mri / mri.std('case')).values)
 ```
 
 ```
-PCA(copy=True, iterated_power='auto', n_components=10,
+PCA(copy=True, iterated_power='auto', n_components=None,
 random_state=None,
   svd_solver='auto', tol=0.0, whiten=False)
 ```
@@ -106,9 +104,36 @@ random_state=None,
 
 
 ```python
+total_var = np.sum(pca.explained_variance_)
+with plot.subplots(3, 1, sharex=True) as (fig, axs):
+    axs[0].plot(
+        range(1, len(pca.explained_variance_)+1),
+        np.cumsum(pca.explained_variance_) / total_var
+    )
+    axs[0].set_ylabel("Total\nExplained Variance")
+    axs[1].plot(
+        range(1, len(pca.explained_variance_)+1),
+        pca.explained_variance_ / total_var
+    )
+    axs[1].set_ylabel("Explained Variance")
+    axs[2].plot(
+        range(2, len(pca.explained_variance_)+1),
+        abs(pca.explained_variance_[1:] - pca.explained_variance_[:-1]) /
+        total_var,
+    )
+    axs[2].set_xlabel("PC")
+    axs[2].set_ylabel("Delta\nExplained Variance")
+n_components = 11
+```
+
+![](figures/mri-remove-size_pca-ev_1.png){#pca-ev }\
+
+
+
+```python
 plot.heatmap(
-    pca.components_.T,
-    xticklabels=[str(i+1) for i in range(pca.components_.shape[0])],
+    pca.components_[:n_components, :].T,
+    xticklabels=[str(i+1) for i in range(n_components)],
     yticklabels=mri.cad_feature.values,
 )
 ```
@@ -173,33 +198,7 @@ for feature in mri['cad_feature'].values:
     else:
         mri_adj.loc[:, feature] = mri.loc[:, feature]
 mri_adj
-```
-
-```
-<xarray.DataArray (case: 282, cad_feature: 24)>
-array([[  0.834377,   0.404613,   9.223177, ...,   1.788136,
-0.560459,
-          0.3728  ],
-       [  0.708083,   0.565305,  23.817364, ...,   1.267695,
-0.538998,   0.277   ],
-       [  0.81277 ,   0.522746,  17.352358, ...,   1.816568,
-0.578061,
-          0.4661  ],
-       ...,
-       [  0.815605,   0.448007,  16.387729, ...,   1.871099,
-0.577052,
-          0.2941  ],
-       [  0.720879,   0.64011 ,  25.838845, ...,   1.974781,
-0.588704,
-          0.5646  ],
-       [  0.644293,   0.496937,  12.224077, ...,   1.188642,
-0.520065,
-          0.5387  ]])
-Coordinates:
-  * case         (case) int64 192 196 199 207 208 217 219 269 273 274
-288 ...
-  * cad_feature  (cad_feature) <U35 'circularity' 'irregularity'
-'volume' ...
+mri_adj.to_netcdf('t.nc')
 ```
 
 
@@ -236,12 +235,12 @@ with plot.subplots(n_row, n_col, figsize=fs) as (fig, axs):
 
 
 ```python
-pca_adj = sklearn.decomposition.PCA(10)
+pca_adj = sklearn.decomposition.PCA()
 pca_adj.fit((mri_adj / mri_adj.std('case')).values)
 ```
 
 ```
-PCA(copy=True, iterated_power='auto', n_components=10,
+PCA(copy=True, iterated_power='auto', n_components=None,
 random_state=None,
   svd_solver='auto', tol=0.0, whiten=False)
 ```
@@ -250,9 +249,38 @@ random_state=None,
 
 
 ```python
+total_var = np.sum(pca.explained_variance_)
+with plot.subplots(3, 1, sharex=True) as (fig, axs):
+    axs[0].plot(
+        range(1, len(pca_adj.explained_variance_)+1),
+        np.cumsum(pca_adj.explained_variance_) / total_var
+    )
+    axs[0].set_ylabel("Total\nExplained Variance")
+    axs[1].plot(
+        range(1, len(pca_adj.explained_variance_)+1),
+        pca_adj.explained_variance_ / total_var
+    )
+    axs[1].set_ylabel("Explained Variance")
+    axs[2].plot(
+        range(2, len(pca_adj.explained_variance_)+1),
+        abs(pca_adj.explained_variance_[1:] -
+            pca_adj.explained_variance_[:-1]) /
+        total_var,
+    )
+    axs[2].set_xlabel("PC")
+    axs[2].set_ylabel("Delta\nExplained Variance")
+n_components = 10
+```
+
+![](figures/mri-remove-size_pca-adj-ev_1.png){#pca-adj-ev }\
+
+
+
+
+```python
 plot.heatmap(
-    pca_adj.components_.T,
-    xticklabels=[str(i+1) for i in range(pca_adj.components_.shape[0])],
+    pca_adj.components_[:n_components, :].T,
+    xticklabels=[str(i+1) for i in range(n_components)],
     yticklabels=mri_adj.cad_feature.values,
 )
 ```
@@ -275,4 +303,47 @@ with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
 ```
 
 ![](figures/mri-remove-size_plot-pca-adj-a_1.png){#plot-pca-adj-a }\
+
+
+#### Varimax ####
+
+
+
+```python
+coeff_varimax, _ = factor_rotation.rotate_factors(
+    pca_adj.components_[:n_components, :].T,
+    'varimax',
+)
+coeff_varimax = coeff_varimax.T
+```
+
+
+
+
+```python
+plot.heatmap(
+    coeff_varimax.T,
+    xticklabels=[str(i+1) for i in range(coeff_varimax.shape[0])],
+    yticklabels=mri_adj.cad_feature.values,
+)
+```
+
+![](figures/mri-remove-size_heatmap-pca-adj-varimax_1.png){#heatmap-pca-adj-varimax }\
+
+
+
+```python
+with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    for i in range(coeff_varimax.shape[1]):
+        ax.arrow(0, 0, coeff_varimax[0, i], coeff_varimax[1, i])
+        alength = sqrt(coeff_varimax[0, i]**2 +
+                       coeff_varimax[1, i]**2)
+        if alength > 0.25:
+            ax.text(coeff_varimax[0, i], coeff_varimax[1, i],
+                    mri_adj['cad_feature'].values[i])
+```
+
+![](figures/mri-remove-size_plot-pca-adj-varimax_1.png){#plot-pca-adj-varimax }\
 

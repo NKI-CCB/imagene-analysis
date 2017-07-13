@@ -11,6 +11,7 @@ Load libraries.
 ```{python import_libs}
 from math import sqrt, ceil
 
+import factor_rotation
 from IPython.display import display, Markdown
 import numpy as np
 import scipy.stats
@@ -46,14 +47,37 @@ print(mri)
 ### PCA ###
 
 ```{python fit-pca}
-pca = sklearn.decomposition.PCA(10)
+pca = sklearn.decomposition.PCA()
 pca.fit((mri / mri.std('case')).values)
+```
+
+```{python pca-ev}
+total_var = np.sum(pca.explained_variance_)
+with plot.subplots(3, 1, sharex=True) as (fig, axs):
+    axs[0].plot(
+        range(1, len(pca.explained_variance_)+1),
+        np.cumsum(pca.explained_variance_) / total_var
+    )
+    axs[0].set_ylabel("Total\nExplained Variance")
+    axs[1].plot(
+        range(1, len(pca.explained_variance_)+1),
+        pca.explained_variance_ / total_var
+    )
+    axs[1].set_ylabel("Explained Variance")
+    axs[2].plot(
+        range(2, len(pca.explained_variance_)+1),
+        abs(pca.explained_variance_[1:] - pca.explained_variance_[:-1]) /
+        total_var,
+    )
+    axs[2].set_xlabel("PC")
+    axs[2].set_ylabel("Delta\nExplained Variance")
+n_components = 11
 ```
 
 ```{python heatmap-pca}
 plot.heatmap(
-    pca.components_.T,
-    xticklabels=[str(i+1) for i in range(pca.components_.shape[0])],
+    pca.components_[:n_components, :].T,
+    xticklabels=[str(i+1) for i in range(n_components)],
     yticklabels=mri.cad_feature.values,
 )
 ```
@@ -106,6 +130,7 @@ for feature in mri['cad_feature'].values:
     else:
         mri_adj.loc[:, feature] = mri.loc[:, feature]
 mri_adj
+mri_adj.to_netcdf('t.nc')
 ```
 
 ### Normal QQ-plots of MRI CAD features ###
@@ -135,14 +160,39 @@ with plot.subplots(n_row, n_col, figsize=fs) as (fig, axs):
 ### PCA ###
 
 ```{python fit-pca-adj}
-pca_adj = sklearn.decomposition.PCA(10)
+pca_adj = sklearn.decomposition.PCA()
 pca_adj.fit((mri_adj / mri_adj.std('case')).values)
 ```
 
+```{python pca-adj-ev}
+total_var = np.sum(pca.explained_variance_)
+with plot.subplots(3, 1, sharex=True) as (fig, axs):
+    axs[0].plot(
+        range(1, len(pca_adj.explained_variance_)+1),
+        np.cumsum(pca_adj.explained_variance_) / total_var
+    )
+    axs[0].set_ylabel("Total\nExplained Variance")
+    axs[1].plot(
+        range(1, len(pca_adj.explained_variance_)+1),
+        pca_adj.explained_variance_ / total_var
+    )
+    axs[1].set_ylabel("Explained Variance")
+    axs[2].plot(
+        range(2, len(pca_adj.explained_variance_)+1),
+        abs(pca_adj.explained_variance_[1:] -
+            pca_adj.explained_variance_[:-1]) /
+        total_var,
+    )
+    axs[2].set_xlabel("PC")
+    axs[2].set_ylabel("Delta\nExplained Variance")
+n_components = 10
+```
+
+
 ```{python heatmap-pca-adj}
 plot.heatmap(
-    pca_adj.components_.T,
-    xticklabels=[str(i+1) for i in range(pca_adj.components_.shape[0])],
+    pca_adj.components_[:n_components, :].T,
+    xticklabels=[str(i+1) for i in range(n_components)],
     yticklabels=mri_adj.cad_feature.values,
 )
 ```
@@ -157,5 +207,37 @@ with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
                        pca_adj.components_[1, i]**2)
         if alength > 0.25:
             ax.text(pca_adj.components_[0, i], pca_adj.components_[1, i],
+                    mri_adj['cad_feature'].values[i])
+```
+
+### Varimax ###
+
+
+```{python fit-pca-adj-varimax}
+coeff_varimax, _ = factor_rotation.rotate_factors(
+    pca_adj.components_[:n_components, :].T,
+    'varimax',
+)
+coeff_varimax = coeff_varimax.T
+```
+
+```{python heatmap-pca-adj-varimax}
+plot.heatmap(
+    coeff_varimax.T,
+    xticklabels=[str(i+1) for i in range(coeff_varimax.shape[0])],
+    yticklabels=mri_adj.cad_feature.values,
+)
+```
+
+```{python plot-pca-adj-varimax}
+with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    for i in range(coeff_varimax.shape[1]):
+        ax.arrow(0, 0, coeff_varimax[0, i], coeff_varimax[1, i])
+        alength = sqrt(coeff_varimax[0, i]**2 +
+                       coeff_varimax[1, i]**2)
+        if alength > 0.25:
+            ax.text(coeff_varimax[0, i], coeff_varimax[1, i],
                     mri_adj['cad_feature'].values[i])
 ```
