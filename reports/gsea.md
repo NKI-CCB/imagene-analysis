@@ -30,6 +30,7 @@ matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = ['Alegreya Sans']
 matplotlib.rcParams['font.weight'] = 'regular'
 matplotlib.rcParams['figure.dpi'] = 300
+matplotlib.rcParams['figure.figsize'] = (5.2, 5.2)
 ```
 
 
@@ -77,17 +78,25 @@ are significant.
 
 
 ```python
-def plot_ds(ds, fdr, le_prop=0.0):
+def plot_ds(ds, fdr, le_prop=0.0, abs=True):
     ds = ds.copy()
     ds['significance_mask'] = (ds['fdr'] > fdr) | (ds['le_prop'] < le_prop)
     ds = ds.sel(
         gene_set=np.logical_not(ds['significance_mask'])
                  .sum('mri_feature') > 0,
     )
-    with plot.subplots(1, 1, figsize=(8, 5.5)) as (fig, ax):
+    if abs:
+        zlim = [0, np.max(ds['nes'])]
+        cmap='viridis'
+    else:
+        zlim = np.max(np.abs(ds['nes']))
+        zlim = [-zlim, zlim]
+        cmap = 'coolwarm'
+
+    with plot.subplots(1, 1) as (fig, ax):
         plot.heatmap(
             ds['nes'], mask=ds['significance_mask'],
-            zlim=[0, np.max(ds['nes'])], cmap='viridis',
+            zlim=zlim, cmap=cmap,
             row_dendrogram=True, col_dendrogram=True,
             ax=ax,
         )
@@ -117,7 +126,7 @@ Hallmarks from MSigDB.
 plot_ds(df_h, fdr=0.25)
 ```
 
-![](figures/gsea_hallmarks-es-plot_1.png){#hallmarks-es-plot }\
+![](figures/gsea_hallmarks-es-plot_1){#hallmarks-es-plot }\
 
 
 
@@ -280,7 +289,7 @@ Hallmarks from MSigDB.
 plot_ds(df_h_rv, fdr=0.25)
 ```
 
-![](figures/gsea_hallmarks-es-plot-rv_1.png){#hallmarks-es-plot-rv }\
+![](figures/gsea_hallmarks-es-plot-rv_1){#hallmarks-es-plot-rv }\
 
 
 
@@ -317,18 +326,18 @@ Gene signatures (c2.cgp) from MSigDB.
 
 
 ```python
-plot_ds(df_cgp_rv, fdr=0.25, le_prop=0.0)
+plot_ds(df_cgp_rv, fdr=0.25, le_prop=0.0, abs=False)
 ```
 
-![](figures/gsea_cgp-es-plot-rv-a_1.png){#cgp-es-plot-rv-a }\
+![](figures/gsea_cgp-es-plot-rv-a_1){#cgp-es-plot-rv-a }\
 
 
 
 ```python
-plot_ds(df_cgp_rv, fdr=0.25, le_prop=0.8)
+plot_ds(df_cgp_rv, fdr=0.25, le_prop=0.8, abs=False)
 ```
 
-![](figures/gsea_cgp-es-plot-rv-b_1.png){#cgp-es-plot-rv-b }\
+![](figures/gsea_cgp-es-plot-rv-b_1){#cgp-es-plot-rv-b }\
 
 
 
@@ -1383,7 +1392,7 @@ Pathways (c2.cp) from MSigDB.
 plot_ds(df_cp_rv, fdr=0.25)
 ```
 
-![](figures/gsea_cp-es-plot-rv_1.png){#cp-es-plot-rv }\
+![](figures/gsea_cp-es-plot-rv_1){#cp-es-plot-rv }\
 
 
 

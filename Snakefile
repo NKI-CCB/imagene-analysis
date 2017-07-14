@@ -295,6 +295,8 @@ rule markdown_to_html:
         "--standalone "
         "--mathjax "
         "--template=reports/pandoc-template.html "
+        "--dpi=300 "
+        "--default-image-extension=png "
         "--toc "
         "--highlight-style pygments "
         "--section-divs "
