@@ -187,6 +187,7 @@ rule all_features:
     input:
         "data/processed/mri-features.nc",
         "data/processed/mri-features-reg-volume.nc",
+        "data/processed/mri-features-fa.nc",
 
 rule regress_out_volume:
     input:
@@ -196,6 +197,15 @@ rule regress_out_volume:
         "data/processed/mri-features-reg-volume.nc"
     shell:
         "{config[python]} {input.script} {input.mri} {output}"
+
+rule factor_analysis_mri_features:
+    input:
+        script="src/features/fa_mri_features.py",
+        mri="data/processed/mri-features.nc",
+    output:
+        "data/processed/mri-features-fa.nc"
+    shell:
+        "{config[python]} {input.script} 10 {input.mri} {output}"
 
 ########################################################################
 # MODELS                                                               #

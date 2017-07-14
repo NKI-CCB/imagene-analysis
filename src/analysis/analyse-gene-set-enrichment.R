@@ -54,14 +54,18 @@ read_mri <- function(fn) {
     ds <- nc_open(fn)
     on.exit({nc_close(ds)})
 
-    mri <- nc_read_data_frame(ds, 'case')
-    # Integer variables as index are not funny in R, so we make it character.
-    mri$case <- as.character(mri$case)
-    mri$MultiFocal <- NULL
-    mri_mat <- t(as.matrix(mri[, sapply(mri, is.numeric)]))
-    dimnames(mri_mat) <- list(
-        mri_feature=rownames(mri_mat),
-        case=mri$case)
+    if ('factors' %in% names(ds$var)) {
+        mri_mat = nc_read_matrix(ds, 'factors')
+    } else {
+        mri <- nc_read_data_frame(ds, 'case')
+        # Integer variables as index are not funny in R, so we make it character.
+        mri$case <- as.character(mri$case)
+        mri$MultiFocal <- NULL
+        mri_mat <- t(as.matrix(mri[, sapply(mri, is.numeric)]))
+        dimnames(mri_mat) <- list(
+            mri_feature=rownames(mri_mat),
+            case=mri$case)
+    }
     mri_mat
 }
 
