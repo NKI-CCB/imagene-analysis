@@ -129,7 +129,8 @@ rule unzip_msigdb:
     shell:
         "unzip -p {input} "
         "msigdb_v5.2_files_to_download_locally/msigdb_v5.2_GMTs/"
-        "{wildcards.gene_set}.v5.2.{wildcards.gene_ids}.gmt > {output}"
+        "{wildcards.gene_set}.v5.2.{wildcards.gene_ids}.gmt > {output}\n"
+        "touch {output}"
 
 
 #-------------
@@ -261,12 +262,27 @@ rule gene_set_analysis_to_netcdf:
 # REPORTS                                                              #
 ########################################################################
 
+gsea_deps = [
+    "src/plot.py",
+    "src/reports/es-heatmap-fun.py",
+    "src/reports/load-gsea-fun.py",
+    "src/reports/setup-matplotlib.py",
+]
+
 report_deps = {
     "gsea": [
         "analyses/gsea/mri-features_h.all_T.nc",
+    ] + gsea_deps,
+    "gsea-reg": [
+        "analyses/gsea/mri-features-reg-volume_c2.cgp_F.nc",
         "analyses/gsea/mri-features-reg-volume_h.all_T.nc",
-        "src/plot.py",
-    ],
+        "analyses/gsea/mri-features-reg-volume_c2.cp_T.nc",
+    ] + gsea_deps,
+    "gsea-fa": [
+        "analyses/gsea/mri-features-fa_c2.cgp_F.nc",
+        "analyses/gsea/mri-features-fa_h.all_T.nc",
+        "analyses/gsea/mri-features-fa_c2.cp_T.nc",
+    ] + gsea_deps,
 }
 
 rule weave_report:
