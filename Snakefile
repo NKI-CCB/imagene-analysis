@@ -137,6 +137,31 @@ rule unzip_msigdb:
 # Process Data
 
 
+rule tcga_factors_to_tsv:
+    input:
+        "data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5",
+    output:
+        "data/to_share/tcga-breast-gexp+rppa+cn-sfa-factors.tsv",
+    run:
+        import h5py
+        import xarray as xr
+        import pandas as pd
+        import numpy as np
+
+        with h5py.File(input[0]) as f:
+            samples = [s.decode() for s in f['sample names']]
+            factor_names = ['Factor {}'.format(i+1)
+                            for i in range(f['factors'].shape[1])]
+            tcga_factors = xr.DataArray(
+                data=np.array(f['factors']),
+                dims=['Patient', 'factor'],
+                coords={
+                    'Patient': np.array(samples, 'object'),
+                    'factor': np.array(factor_names, 'object'),
+                },
+            )
+            tcga_factors.to_pandas().to_csv(output[0], sep='\t')
+
 rule process_mri_features:
     input:
         script="src/data/process_mri.py",
