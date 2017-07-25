@@ -374,6 +374,22 @@ rule markdown_to_html:
         "{input.md} -o {output}"
 
 
+all_notebooks = [str(p.with_suffix(".html"))
+                 for p in Path('notebooks').glob("*.ipynb")]
+
+rule all_notebooks:
+    input: all_notebooks
+        
+
+rule convert_notebook_to_html:
+    input:
+        "notebooks/{notebook}.ipynb",
+    output:
+        "notebooks/{notebook}.html",
+    shell:
+        "{config[nbconvert]} --to html --execute {input}"
+
+
 ########################################################################
 # INTERACTIVE                                                          #
 ########################################################################
