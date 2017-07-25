@@ -23,13 +23,10 @@ import plot
 
 Setup style of plots.
 
-```{python setup-matplotlib}
-import matplotlib
-matplotlib.rcParams['font.family'] = 'sans-serif'
-matplotlib.rcParams['font.sans-serif'] = ['Alegreya Sans']
-matplotlib.rcParams['font.weight'] = 'regular'
-matplotlib.rcParams['figure.dpi'] = 300
+```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
 ```
+
+Load MRI CAD features.
 
 ```{python load-mri}
 mri_ds = xr.open_dataset('../data/processed/mri-features.nc')

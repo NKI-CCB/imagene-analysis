@@ -13,17 +13,32 @@ dotenv.load_dotenv(str(Path("./.env").resolve()))
 beehub_username = os.environ["BEEHUB_USERNAME"]
 beehub_password = os.environ["BEEHUB_PASSWORD"]
 
-# Other environment
+# Allow importing of Python modules from src directory
 os.environ["PYTHONPATH"] = str(Path("./src/").resolve())
+
+
+def get_all(wildcards):
+    return all_data + all_features + all_analyses + all_reports + all_models
+
+rule all:
+    input:  get_all
 
 
 ########################################################################
 # DATA                                                                 #
 ########################################################################
 
+
+all_data = [
+    "data/processed/gene-expression.nc",
+    "data/processed/mri-features.nc",
+    "data/processed/mri-eigenbreasts.nc",
+    "data/raw/imagene_clinical.tsv",
+]
+
+
 #------------------
 # Download Raw Data
-
 
 def download_beehub(file_location, out):
     file_url = 'https://beehub.nl/' + file_location
@@ -43,12 +58,6 @@ def download_beehub(file_location, out):
             for chunk in bar:
                 file.write(chunk)
 
-
-rule all_data:
-    input:
-        "data/processed/gene-expression.nc",
-        "data/processed/mri-features.nc",
-        "data/raw/imagene_clinical.tsv"
 
 rule download_gene_expression:
     output: "data/raw/gene-expression.nc"
@@ -209,11 +218,11 @@ rule process_gene_expression:
 # FEATURES                                                             #
 ########################################################################
 
-rule all_features:
-    input:
-        "data/processed/mri-features.nc",
-        "data/processed/mri-features-reg-volume.nc",
-        "data/processed/mri-features-fa.nc",
+all_features = [
+    "data/processed/mri-features.nc",
+    "data/processed/mri-features-reg-volume.nc",
+    "data/processed/mri-features-fa.nc",
+]
 
 rule regress_out_volume:
     input:
@@ -237,9 +246,9 @@ rule factor_analysis_mri_features:
 # MODELS                                                               #
 ########################################################################
 
-rule all_models:
-    input:
-        "models/sfa.nc"
+all_models = [
+    "models/sfa.nc",
+]
 
 
 rule apply_tcga_sfa:
@@ -256,6 +265,18 @@ rule apply_tcga_sfa:
 ########################################################################
 # ANALYSIS                                                             #
 ########################################################################
+
+
+all_analyses = ["analyses/gsea/" + f for f in [
+    "mri-features_h.all_T.nc",
+    "mri-features-fa_c2.cgp_F.nc",
+    "mri-features-fa_c2.cp_T.nc",
+    "mri-features-fa_h.all_T.nc",
+    "mri-features-reg-volume_c2.cgp_F.nc",
+    "mri-features-reg-volume_c2.cp_T.nc",
+    "mri-features-reg-volume_h.all_T.nc",
+]]
+
 
 rule analyse_gene_sets:
     input:
@@ -287,6 +308,15 @@ rule gene_set_analysis_to_netcdf:
 # REPORTS                                                              #
 ########################################################################
 
+
+all_reports= ["reports/" + f for f in [
+    "gsea.html",
+    "gsea-fa.html",
+    "gsea-reg.html",
+    "mri-remove-size.html",
+]]
+
+
 gsea_deps = [
     "src/plot.py",
     "src/reports/es-heatmap-fun.py",
@@ -308,6 +338,11 @@ report_deps = {
         "analyses/gsea/mri-features-fa_h.all_T.nc",
         "analyses/gsea/mri-features-fa_c2.cp_T.nc",
     ] + gsea_deps,
+    "mri-remove-size": [
+        "src/plot.py",
+        "src/reports/setup-matplotlib.py"
+        "data/processed/mri-features.nc",
+    ]
 }
 
 rule weave_report:
@@ -342,6 +377,12 @@ rule markdown_to_html:
         "--highlight-style pygments "
         "--section-divs "
         "{input.md} -o {output}"
+
+
+########################################################################
+# INTERACTIVE                                                          #
+########################################################################
+
 
 rule run_notebook:
     shell:
