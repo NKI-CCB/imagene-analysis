@@ -266,16 +266,11 @@ rule apply_tcga_sfa:
 # ANALYSIS                                                             #
 ########################################################################
 
-
-all_analyses = ["analyses/gsea/" + f for f in [
-    "mri-features_h.all_T.nc",
-    "mri-features-fa_c2.cgp_F.nc",
-    "mri-features-fa_c2.cp_T.nc",
-    "mri-features-fa_h.all_T.nc",
-    "mri-features-reg-volume_c2.cgp_F.nc",
-    "mri-features-reg-volume_c2.cp_T.nc",
-    "mri-features-reg-volume_h.all_T.nc",
-]]
+all_analyses = expand(
+    "analyses/gsea/{features}_{gene_set_abs}.nc",
+    features=["mri-features", "mri-features-fa", "mri-features-reg-volume"],
+    gene_set_abs=["c2.cgp_F", "c2.cp_T", "h.all_T"],
+)
 
 
 rule analyse_gene_sets:
