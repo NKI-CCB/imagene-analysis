@@ -21,7 +21,11 @@ def get_all(wildcards):
     return all_data + all_features + all_analyses + all_reports + all_models
 
 rule all:
-    input:  get_all
+    input: get_all
+
+# For running from Makefile
+rule all_from_make:
+    input: get_all
 
 
 ########################################################################

@@ -9,7 +9,7 @@ R=Rscript
 # COMMANDS                                                                      #
 #################################################################################
 
-all: venv requirements all_data all_models
+all: venv requirements all_from_make
 .PHONY: all
 
 # Environment
@@ -24,7 +24,7 @@ ACTIVATE_ENV=. venv/bin/activate
 
 requirements: venv
 	$(ACTIVATE_ENV); \
-	pip install -q -r requirements.txt; \
+	pip install -r requirements.txt; \
 	${R} requirements.R
 .PHONY: requirements
 
@@ -35,7 +35,13 @@ update-requirements: venv
 # Tools
 
 clean:
-	find . -name "*.pyc" -exec rm {} \;
+	find src/ -name "*.pyc" -exec rm {} \;
+	find src/ -name "__pycache__" -exec rmdir {} \;
+	find notebooks/ -name "*.html" -exec rm {} \;
+	find reports/ -name "*.md" -exec rm {} \;
+	find reports/ -name "*.html" ! -name pandoc-template.html -exec rm {} \;
+	-rm -f reports/figures/*
+
 .PHONY: clean
 
 lint:
@@ -51,9 +57,8 @@ help:
 	@echo "venv                Make virtual environment"
 	@echo "requirements        Install Python dependencies"
 	@echo "update-requirements Update Python dependencies to their latest version"
-	@echo "data                Make all datasets"
-	@echo "models              Make all models"
-	@echo "lint                Lint using flake8"
+	@echo "all                 Make all data, models and reports"
+
 
 # Load environment and make files with project rules.
 
