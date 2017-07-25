@@ -1,3 +1,6 @@
 *.html
+*.md
 figures/*.pdf
 figures/*.svg
+figures/*.png
+!pandoc-template.html
