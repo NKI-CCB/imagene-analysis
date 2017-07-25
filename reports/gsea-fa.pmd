@@ -30,12 +30,15 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 
 ```{python load-gsea}
 df_h = load_gsea_ds("../analyses/gsea/mri-features-fa_h.all_T.nc")
+df_h['mri_feature'] = ('mri_feature',
+    ["F{}".format(i) for i in df_h['mri_feature'].values])
 df_cgp = load_gsea_ds("../analyses/gsea/mri-features-fa_c2.cgp_F.nc")
+df_cgp['mri_feature'] = ('mri_feature',
+    ["F{}".format(i) for i in df_cgp['mri_feature'].values])
 df_cp = load_gsea_ds("../analyses/gsea/mri-features-fa_c2.cp_T.nc")
+df_cp['mri_feature'] = ('mri_feature',
+    ["F{}".format(i) for i in df_cp['mri_feature'].values])
 ```
-
-A function to plot a heatmap with normalized enrichment statistics (NES) that
-are significant.
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that
 are significant.
@@ -75,7 +78,7 @@ table_ds(df_h, fdr=0.25)
 Gene signatures (c2.cgp) from MSigDB.
 
 ```{python cgp-es-plot-a}
-plot_ds(df_cgp, fdr=0.05, le_prop=0.0, abs=False)
+plot_ds(df_cgp, fdr=0.25, le_prop=0.0, abs=False)
 ```
 
 ```{python cgp-es-plot-b}
@@ -89,7 +92,7 @@ table_ds(df_cgp, fdr=0.25)
 Pathways (c2.cp) from MSigDB.
 
 ```{python cp-es-plot-a}
-plot_ds(df_cp, fdr=0.05, le_prop=0.0)
+plot_ds(df_cp, fdr=0.25, le_prop=0.0)
 ```
 
 ```{python cp-es-plot-b}
@@ -97,5 +100,5 @@ plot_ds(df_cp, fdr=0.05, le_prop=0.8)
 ```
 
 ```{python cp-table}
-table_ds(df_cp, fdr=0.05)
+table_ds(df_cp, fdr=0.25)
 ```
