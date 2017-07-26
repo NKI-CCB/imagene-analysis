@@ -1,3 +1,5 @@
+from functools import reduce
+from operator import add
 import os
 from pathlib import Path
 
@@ -17,15 +19,27 @@ beehub_password = os.environ["BEEHUB_PASSWORD"]
 os.environ["PYTHONPATH"] = str(Path("./src/").resolve())
 
 
-def get_all(wildcards):
-    return all_data + all_features + all_analyses + all_reports + all_models
+all_targets = dict()
 
 rule all:
-    input: get_all
-
-# For running from Makefile
+    input: lambda _: reduce(add, all_targets.items())
 rule all_from_make:
-    input: get_all
+    input: lambda _: reduce(add, all_targets.items())
+
+rule all_data:
+    input: lambda _: all_targets['data']
+rule all_reports:
+    input: lambda _: all_targets['reports']
+rule all_features:
+    input: lambda _: all_targets['features']
+rule all_models:
+    input: lambda _: all_targets['models']
+rule all_analyses:
+    input: lambda _: all_targets['analyses']
+rule all_reports:
+    input: lambda _: all_targets['reports']
+rule all_notebooks:
+    input: lambda _: all_targets['notebooks']
 
 
 ########################################################################
@@ -222,7 +236,7 @@ rule process_gene_expression:
 # FEATURES                                                             #
 ########################################################################
 
-all_features = [
+all_targets['features'] = [
     "data/processed/mri-features.nc",
     "data/processed/mri-features-reg-volume.nc",
     "data/processed/mri-features-fa.nc",
@@ -250,7 +264,7 @@ rule factor_analysis_mri_features:
 # MODELS                                                               #
 ########################################################################
 
-all_models = [
+all_targs['models'] = [
     "models/sfa.nc",
 ]
 
@@ -270,7 +284,7 @@ rule apply_tcga_sfa:
 # ANALYSIS                                                             #
 ########################################################################
 
-all_analyses = expand(
+all_targets['analyses'] = expand(
     "analyses/gsea/{features}_{gene_set_abs}.nc",
     features=["mri-features", "mri-features-fa", "mri-features-reg-volume"],
     gene_set_abs=["c2.cgp_F", "c2.cp_T", "h.all_T"],
@@ -308,7 +322,7 @@ rule gene_set_analysis_to_netcdf:
 ########################################################################
 
 
-all_reports= ["reports/" + f for f in [
+all_targets['reports'] = ["reports/" + f for f in [
     "gsea.html",
     "gsea-fa.html",
     "gsea-reg.html",
@@ -339,7 +353,7 @@ report_deps = {
     ] + gsea_deps,
     "mri-remove-size": [
         "src/plot.py",
-        "src/reports/setup-matplotlib.py"
+        "src/reports/setup-matplotlib.py",
         "data/processed/mri-features.nc",
     ]
 }
@@ -378,8 +392,10 @@ rule markdown_to_html:
         "{input.md} -o {output}"
 
 
-all_notebooks = [str(p.with_suffix(".html"))
-                 for p in Path('notebooks').glob("*.ipynb")]
+all_targets['notebooks'] = [
+    str(p.with_suffix(".html"))
+    for p in Path('notebooks').glob("*.ipynb")
+]
 
 rule all_notebooks:
     input: all_notebooks
