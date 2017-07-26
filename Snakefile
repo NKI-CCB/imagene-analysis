@@ -36,8 +36,6 @@ rule all_models:
     input: lambda _: all_targets['models']
 rule all_analyses:
     input: lambda _: all_targets['analyses']
-rule all_reports:
-    input: lambda _: all_targets['reports']
 rule all_notebooks:
     input: lambda _: all_targets['notebooks']
 
@@ -264,7 +262,7 @@ rule factor_analysis_mri_features:
 # MODELS                                                               #
 ########################################################################
 
-all_targs['models'] = [
+all_targets['models'] = [
     "models/sfa.nc",
 ]
 
@@ -397,9 +395,6 @@ all_targets['notebooks'] = [
     for p in Path('notebooks').glob("*.ipynb")
 ]
 
-rule all_notebooks:
-    input: all_notebooks
-        
 
 rule convert_notebook_to_html:
     input:
