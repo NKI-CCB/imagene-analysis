@@ -249,6 +249,18 @@ rule process_clincal:
         "{config[python]} {input.script} {input.tsv} {output} "
 
 
+rule select_er:
+    input:
+        script="src/data/select_samples.py",
+        mri="data/processed/mri-features-all.nc",
+        clinical="data/processed/clinical.nc",
+    output:
+        "data/processed/mri-features-er.nc",
+    shell:
+        "{config[python]} {input.script} {input.mri} --er-positive "
+        "{input.clinical} {output}"
+
+
 ########################################################################
 # FEATURES                                                             #
 ########################################################################
@@ -262,18 +274,18 @@ all_targets['features'] = [
 rule regress_out_volume:
     input:
         script="src/features/regress_out_mri_var.py",
-        mri="data/processed/mri-features.nc",
+        mri="data/processed/mri-features-{subset}.nc",
     output:
-        "data/processed/mri-features-reg-volume.nc"
+        "data/processed/mri-features-{subset}-reg-volume.nc"
     shell:
         "{config[python]} {input.script} {input.mri} {output}"
 
 rule factor_analysis_mri_features:
     input:
         script="src/features/fa_mri_features.py",
-        mri="data/processed/mri-features.nc",
+        mri="data/processed/mri-features-{subset}.nc",
     output:
-        "data/processed/mri-features-fa.nc"
+        "data/processed/mri-features-{subset}-fa.nc"
     shell:
         "{config[python]} {input.script} 10 {input.mri} {output}"
 
@@ -329,7 +341,10 @@ rule cross_validate_factors_from_mri:
 
 all_targets['analyses'] = expand(
     "analyses/gsea/{features}_{gene_set_abs}.nc",
-    features=["mri-features", "mri-features-fa", "mri-features-reg-volume"],
+    features=[
+        "mri-features", "mri-features-fa", "mri-features-reg-volume",
+        "mri-features-er", "mri-features-er-fa", "mri-features-er-reg-volume",
+    ],
     gene_set_abs=["c2.cgp_F", "c2.cp_T", "h.all_T"],
 )
 
