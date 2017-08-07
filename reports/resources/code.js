@@ -1,14 +1,7 @@
 $(document).ready(function(){
-    $('.datatable>table').DataTable({
-        columnDefs: [
-            {   targets: 0,
-                render: ""
-            },
-            {   targets: '_all',
-                render: $.fn.dataTable.render.number( ',', '.', 3)
-            }
-        ]
-    });
+  $('.datatable>table').DataTable({
+    order: []
+  });
   $('pre code.sourceCode').each(function(i, block) {
     hljs.highlightBlock(block);
   });

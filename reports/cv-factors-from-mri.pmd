@@ -1,0 +1,87 @@
+---
+title: Cross validation of models predicting MRI features from funcSFA factors.
+author: Tycho Bismeijer
+date: 2017-08-04
+---
+
+## Setup ## {.collapsed}
+
+```{python load-libs}
+from IPython.display import display, Markdown
+import numpy as np
+import pandas as pd
+import seaborn
+import xarray as xr
+
+import plot
+```
+
+Setup style of plots.
+
+```{python setup-seaborn}
+seaborn.set()
+seaborn.set_style('ticks')
+seaborn.set_palette('Set2')
+```
+
+```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
+```
+
+```{python util_funcs}
+def display_table(t, fullwidth=False, floatfmt=".2f"):
+    from tabulate import tabulate
+
+    classes = ['datatable']
+    if fullwidth:
+        classes.append('fullwidth')
+
+    table_md = tabulate(t, headers='keys', showindex=False, floatfmt=floatfmt)
+    display(Markdown(
+        '<div class="{classes}">{table_md}\n\n</div>'
+        .format(classes=" ".join(classes), table_md=table_md),
+    ))
+```
+
+```{python load-data}
+perf = xr.open_dataset('../models/factors_from_mri/performance.nc')
+```
+
+
+## Results ##
+
+We used random forest regression to explore how much the funcSFA factors can
+be explained by the MRI features. We see from the distribution of the
+explained variance [^ev_rf]
+
+[^ev_rf]:
+    {-}
+    ![Histogram of explained variance by random forest](figures/cv-factors-from-mri_hist-ev-rf_1)
+
+
+```{python hist-ev-rf, fig=False}
+with plot.subplots(3, 1, figsize=(3, 4.5), sharex=True) as (fig, axs):
+    for i, model in enumerate(perf['model'].values):
+        seaborn.distplot(
+            perf['explained_variance'].sel(model=model).to_pandas(),
+            hist=True, kde=True, rug=True, bins='sturges',
+            color='C' + str(i),
+            label=model,
+            ax=axs[i],
+        )
+    seaborn.despine()
+```
+
+```{python display-ev-table}
+display_table(perf['explained_variance'].to_dataframe()
+              .sort_values('explained_variance', 0, False).reset_index())
+```
+
+The random forest estimate the importance of the factors to predict a MRI
+feature. We see that volume is most important, again.
+
+```{python display-feature-importance-table}
+fi = perf[['feature_importance', 'factor_name']].to_dataframe().reset_index()
+fi = fi.loc[np.isfinite(fi['feature_importance']), :]
+fi = fi.sort_values('feature_importance', ascending=False)
+display_table(fi)
+```

@@ -4,6 +4,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 import xarray as xr
+import yaml
 
 
 def parse_args():
@@ -14,11 +15,13 @@ def parse_args():
     parser.add_argument('gene_expression', help="Gene expression data in"
                                                 "netCDF format")
     parser.add_argument('sfa_model', help="SFA model in hdf5 file.")
+    parser.add_argument('sfa_model_conf', help="Configuration of SFA model.")
     parser.add_argument('out', help="Applied SFA factors NetCDF output.")
 
     args = parser.parse_args()
     args.gene_expression = Path(args.gene_expression).resolve()
     args.sfa_model = Path(args.sfa_model).resolve()
+    args.sfa_model_conf = Path(args.sfa_model_conf).resolve()
     args.out = Path(args.out)
     args.out = args.out.parent.resolve() / args.out.name
 
@@ -102,10 +105,15 @@ def apply_sfa(gene_expression, coefficients):
 if __name__ == "__main__":
 
     args = parse_args()
+    with args.sfa_model_conf.open('r') as f:
+        conf = yaml.load(f)
 
     coefficients = read_coefficients(args.sfa_model)
     gene_expression = read_gene_expression(args.gene_expression)
     factors = apply_sfa(gene_expression, coefficients)
 
-    ds = xr.Dataset({'factors': factors})
+    ds = xr.Dataset({
+        'factors': factors,
+        'factor_name': ('factor', conf['names']),
+    })
     ds.to_netcdf(str(args.out))

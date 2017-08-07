@@ -22,9 +22,9 @@ os.environ["PYTHONPATH"] = str(Path("./src/").resolve())
 all_targets = dict()
 
 rule all:
-    input: lambda _: reduce(add, all_targets.items())
+    input: lambda _: reduce(add, all_targets.values())
 rule all_from_make:
-    input: lambda _: reduce(add, all_targets.items())
+    input: lambda _: reduce(add, all_targets.values())
 
 rule all_data:
     input: lambda _: all_targets['data']
@@ -45,7 +45,7 @@ rule all_notebooks:
 ########################################################################
 
 
-all_data = [
+all_targets['data'] = [
     "data/processed/gene-expression.nc",
     "data/processed/mri-features.nc",
     "data/processed/mri-eigenbreasts.nc",
@@ -126,6 +126,15 @@ rule download_sfa_tcga_breast:
         download_beehub(
             "home/tychobismeijer/Imagene/external/"
             "tcga-breast-gexp+rppa+cn-sfa-solution.h5",
+            output[0])
+
+
+rule download_sfa_tcga_breast_conf:
+    output: "data/external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml"
+    run:
+        download_beehub(
+            "home/tychobismeijer/Imagene/external/"
+            "tcga-breast-gexp+rppa+cn-sfa-solution.yaml",
             output[0])
 
 
@@ -230,6 +239,7 @@ rule process_gene_expression:
         "{config[python]} {input.script} {input.gexp} {input.sample_tracking} "
         "{input.gene_annot} {output}"
 
+
 ########################################################################
 # FEATURES                                                             #
 ########################################################################
@@ -258,12 +268,13 @@ rule factor_analysis_mri_features:
     shell:
         "{config[python]} {input.script} 10 {input.mri} {output}"
 
+
 ########################################################################
 # MODELS                                                               #
 ########################################################################
 
 all_targets['models'] = [
-    "models/sfa.nc",
+    "models/sfa/sfa.nc",
 ]
 
 
@@ -271,12 +282,37 @@ rule apply_tcga_sfa:
     input:
         script="src/models/apply_sfa.py",
         gexp="data/processed/gene-expression.nc",
+        conf="data/external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml",
         sfa_tcga="data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5",
     output:
-        "models/sfa.nc"
+        "models/sfa/sfa.nc"
     shell:
         "{config[python]} {input.script} {input.gexp} {input.sfa_tcga} "
+        "{input.conf} {output}"
+
+rule cross_validate_mri_from_factors:
+    input:
+        script="src/models/cv_mri_from_factors.py",
+        sfa="models/sfa/sfa.nc",
+        mri="data/processed/mri-features.nc",
+    output:
+        "models/mri_from_factors/performance.nc",
+    shell:
+        "{config[python]} {input.script} {input.sfa} {input.mri} "
         "{output}"
+
+rule cross_validate_factors_from_mri:
+    input:
+        script="src/models/cv_factors_from_mri.py",
+        mri="data/processed/mri-features.nc",
+        sfa="models/sfa/sfa.nc",
+    output:
+        "models/factors_from_mri/performance.nc",
+    shell:
+        "{config[python]} {input.script} {input.mri} {input.sfa} "
+        "{output}"
+
+
 
 ########################################################################
 # ANALYSIS                                                             #
@@ -321,10 +357,8 @@ rule gene_set_analysis_to_netcdf:
 
 
 all_targets['reports'] = ["reports/" + f for f in [
-    "gsea.html",
-    "gsea-fa.html",
-    "gsea-reg.html",
-    "mri-remove-size.html",
+    str(p.with_suffix(".html"))
+    for p in Path('notebooks').glob("*.pmd")
 ]]
 
 
@@ -353,7 +387,17 @@ report_deps = {
         "src/plot.py",
         "src/reports/setup-matplotlib.py",
         "data/processed/mri-features.nc",
-    ]
+    ],
+    "cv-mri-from-factors": [
+        "src/plot.py",
+        "src/reports/setup-matplotlib.py",
+        "models/mri_from_factors/performance.nc",
+    ],
+    "cv-factors-from-mri": [
+        "src/plot.py",
+        "src/reports/setup-matplotlib.py",
+        "models/factors_from_mri/performance.nc",
+    ],
 }
 
 rule weave_report:
@@ -387,6 +431,7 @@ rule markdown_to_html:
         "--toc "
         "--highlight-style pygments "
         "--section-divs "
+        "--filter pandoc-sidenote "
         "{input.md} -o {output}"
 
 

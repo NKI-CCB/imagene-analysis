@@ -1,0 +1,113 @@
+---
+title: Cross validation of models predicting MRI features from funcSFA factors.
+author: Tycho Bismeijer
+date: 2017-08-03
+---
+
+## Setup ## {.collapsed}
+
+```{python load-libs}
+from IPython.display import display, Markdown
+import numpy as np
+import pandas as pd
+import seaborn
+import xarray as xr
+
+import plot
+```
+
+
+Setup style of plots.
+
+```{python setup-seaborn}
+seaborn.set()
+seaborn.set_style('ticks')
+seaborn.set_palette('Set2')
+```
+
+```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
+```
+
+```{python util_funcs}
+def display_table(t, fullwidth=False, floatfmt=".2f"):
+    from tabulate import tabulate
+
+    classes = ['datatable']
+    if fullwidth:
+        classes.append('fullwidth')
+
+    table_md = tabulate(t, headers='keys', showindex=False, floatfmt=floatfmt)
+    display(Markdown(
+        '<div class="{classes}">{table_md}\n\n</div>'
+        .format(classes=" ".join(classes), table_md=table_md),
+    ))
+```
+
+```{python load-data}
+perf = xr.open_dataset('../models/mri_from_factors/performance.nc')
+```
+
+## Results ##
+
+We used random forest regression to explore how much the MRI CAD features can
+be explained by the funcSFA factors. We see from the distribution of the
+explained variance [^ev_rf] that only a few features can be predicted, and
+those can only be predicted to a small extent.
+
+[^ev_rf]:
+    {-}
+    ![Histogram of explained variance by random forest](figures/cv-mri-from-factors_hist-ev-rf_1)
+    Histogram of the explained variance in MRI features by a random forest
+    regression.
+
+```{python hist-ev-rf, fig=False}
+with plot.subplots(3, 1, figsize=(3, 4.5), sharex=True) as (fig, axs):
+    for i, model in enumerate(perf['model'].values):
+        seaborn.distplot(
+            perf['explained_variance'].sel(model=model).to_pandas(),
+            hist=True, kde=True, rug=True, bins='sturges',
+            color='C' + str(i),
+            label=model,
+            ax=axs[i],
+        )
+    seaborn.despine()
+```
+
+No large difference in mean absolute error (MAE) was observed [^mae].
+
+[^mae]:
+    {-}
+    ![Median absolute error barplot](figures/cv-mri-from-factors_mae-barplot_1)
+
+```{python mae-barplot, fig=False}
+with plot.subplots(figsize=(3, 3)) as (fig, ax):
+    seaborn.barplot(
+        x='cad_feature',
+        y='median_absolute_error',
+        hue='model',
+        data=perf['median_absolute_error'].to_dataframe().reset_index(),
+        ax=ax,
+    )
+    seaborn.despine(trim=True, bottom=True)
+```
+
+
+The features that can be explained to some extent are related to volume or
+enhancement.
+
+```{python display-ev-table}
+display_table(perf['explained_variance'].to_dataframe()
+              .sort_values('explained_variance', 0, False).reset_index())
+```
+
+The random forest estimate the importance of the factors to predict a MRI
+feature. The ER, HER2, and Normal-like factors are most important to predict
+the volume based features. The enhancement features mostly need Normal-like
+factor.
+
+```{python display-feature-importance-table}
+fi = perf[['feature_importance', 'factor_name']].to_dataframe().reset_index()
+fi = fi.loc[np.isfinite(fi['feature_importance']), :]
+fi = fi.sort_values('feature_importance', ascending=False)
+display_table(fi)
+```
