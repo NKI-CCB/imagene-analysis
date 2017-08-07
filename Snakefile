@@ -49,7 +49,7 @@ all_targets['data'] = [
     "data/processed/gene-expression.nc",
     "data/processed/mri-features.nc",
     "data/processed/mri-eigenbreasts.nc",
-    "data/raw/imagene_clinical.tsv",
+    "data/processed/clinical.nc",
 ]
 
 
@@ -238,6 +238,15 @@ rule process_gene_expression:
     shell:
         "{config[python]} {input.script} {input.gexp} {input.sample_tracking} "
         "{input.gene_annot} {output}"
+
+rule process_clincal:
+    input:
+        script="src/data/process_clinical.py",
+        tsv="data/raw/imagene_clinical.tsv",
+    output:
+        "data/processed/clinical.nc"
+    shell:
+        "{config[python]} {input.script} {input.tsv} {output} "
 
 
 ########################################################################
