@@ -106,8 +106,8 @@ rule download_eigenbreasts:
     output: "data/raw/eigenbreasts_{subset}.xlsx"
     run:
         download_beehub(
-            "home/tychobismeijer/Imagene/mri/2017-07-18-eigenbreasts/"
-            "{}_ero4.xlsx".format(str(Path(output[0]).stem)),
+            "home/tychobismeijer/Imagene/mri/2017-08-09-eigenbreasts/"
+            "eigenbreasts_Elastix_{subset}.xlsx".format(**wildcards),
             output[0],
         )
 
