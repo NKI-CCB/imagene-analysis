@@ -87,7 +87,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
             row_dendrogram=False, row_dist_metric='euclidean',
             row_cluster_method='average', col_dendrogram=False,
             col_dist_metric='euclidean', col_cluster_method='average',
-            ax, cmap=None, symmetric=False):
+            ax, cmap=None, symmetric=False, cbar=True):
     if row_dendrogram or col_dendrogram:
         import scipy.cluster.hierarchy as scipy_ch
         import scipy.spatial.distance as scipy_sd
@@ -151,7 +151,8 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
 
     c = ax.imshow(Zo, cmap=cmap, origin='lower', interpolation='none',
                   aspect='auto', vmin=zlim[0], vmax=zlim[1])
-    cbar = ax.figure.colorbar(c)
+    if cbar:
+        cbar = ax.figure.colorbar(c)
 
     xticklabels, set_xticklabels = _infer_set_ticklabels(xticklabels)
     if set_xticklabels:
@@ -168,7 +169,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         else:
             ax.set_yticklabels(yticklabels)
 
-    if zlabel is not None:
+    if zlabel is not None and cbar:
         cbar.ax.set_ylabel(zlabel)
 
     if xlabel is not None:
