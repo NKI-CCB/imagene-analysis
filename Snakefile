@@ -47,7 +47,7 @@ rule all_notebooks:
 
 all_targets['data'] = [
     "data/processed/gene-expression.nc",
-    "data/processed/mri-features.nc",
+    "data/processed/mri-features-all.nc",
     "data/processed/mri-eigenbreasts.nc",
     "data/processed/clinical.nc",
 ]
@@ -201,7 +201,7 @@ rule process_mri_features:
         script="src/data/process_mri.py",
         xlsx="data/raw/mri-features.xlsx",
     output:
-        "data/processed/mri-features.nc"
+        "data/processed/mri-features-all.nc"
     shell:
         "{config[python]} {input.script} {input.xlsx} {output} "
         "--study-nr-col=MARGINSstudyNr"
@@ -342,7 +342,8 @@ rule cross_validate_factors_from_mri:
 all_targets['analyses'] = expand(
     "analyses/gsea/{features}_{gene_set_abs}.nc",
     features=[
-        "mri-features", "mri-features-fa", "mri-features-reg-volume",
+        "mri-features-all", "mri-features-all-fa",
+        "mri-features-all-reg-volume",
         "mri-features-er", "mri-features-er-fa", "mri-features-er-reg-volume",
     ],
     gene_set_abs=["c2.cgp_F", "c2.cp_T", "h.all_T"],
