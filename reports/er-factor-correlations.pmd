@@ -1,0 +1,145 @@
+---
+title: ER pathway and other ER signatures in ER+ samples.
+author: Tycho Bismeijer
+date: 2017-08-14
+---
+
+## Setup ## {.collapsed}
+
+```{python import-libs}
+from IPython.display import display, Markdown
+import numpy as np
+import pandas as pd
+import seaborn
+from tabulate import tabulate
+import xarray as xr
+
+import plot
+import util
+```
+
+Function to nicely display a table.
+```{python util-funcs}
+def display_table(t):
+    display(Markdown(
+        '<div class="datatable">' +
+        tabulate(t, headers='keys') +
+        "\n\n</div>"
+    ))
+```
+
+Setup plotting style.
+```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
+```
+
+### Load Data ###
+
+Load factors.
+```{python load-factors}
+sfa = xr.open_dataset('../models/sfa/sfa.nc')
+```
+
+Load gene expression data.
+```{python load-gexp}
+gexp = xr.open_dataset("../data/processed/gene-expression.nc")
+```
+
+Load clinical annotation with IHC subtype.
+```{python load-gexp}
+clin = xr.open_dataset("../data/processed/clinical.nc")
+```
+
+### Select ER+ samples ###
+
+```{python select-er-pos}
+sel_cases = set(clin['case'][clin['ihc_subtype'] == 'ER+/HER2-'].values)
+sel_cases &= set(gexp['case'].values)
+sel_cases &= set(sfa['case'].values)
+sel_cases = list(sel_cases)
+clin = clin.reindex(case=sel_cases)
+sfa = sfa.reindex(case=sel_cases)
+gexp = gexp.reindex(case=sel_cases)
+```
+
+### Select ER pathway genes ###
+
+Genes from supplemental table S2 of Verhaegh et al.
+```{python verhaegh-genes}
+verhaegh_genes = [
+    'AP1B1', 'CA12', 'CDH26', 'CELSR2', 'COL18A1', 'COX7A2L', 'CTSD',
+    'DSCAM', 'EBAG9', 'ERBB2', 'ESR1', 'GREB1', 'HSPB1', 'IGFBP4', 'KRT19',
+    'MYC', 'NRIP1', 'PGR', 'PISD', 'PTMA', 'RARA', 'SGK3',
+    'SOD1', 'TFF1', 'TRIM25', 'WISP2', 'XBP1',
+]
+assert all(g in gexp['hgnc_symbol'].values for g in verhaegh_genes)
+gexp_verhaegh = gexp.loc[{
+    'gene': (np.isin(gexp['hgnc_symbol'], verhaegh_genes)),
+}]
+```
+
+Genes from supplemental tables S1 and S2 of Fraser Symmans et al.
+```{python set-index-genes}
+set_index = pd.read_table('../data/external/set-index.tsv')
+set_index_genes = list(set_index['gene'])
+assert all(g in gexp['hgnc_symbol'].values for g in set_index_genes)
+gexp_set_index = gexp.loc[{
+    'gene': (np.isin(gexp['hgnc_symbol'], set_index_genes)),
+}]
+```
+
+## Results on Verhaegh et al. ER Pathway Genes ##
+
+Table and histogram [^hist_v] of the Pearson correlation between the genes from
+Verhaegh et al. and the ER factor. Gene that do not correlate includes ERBB2
+and MYC, which are part of other oncogenic pathways.
+
+[^hist_v]:
+    {-}
+    ![Histogram](figures/er-factor-correlations_correlation-verhaegh_1)
+
+```{python correlation-verhaegh, fig=False}
+pw_v_cor = util.cor(
+    gexp_verhaegh['log2_cpm'],
+    -sfa['factors'][0, :],
+    'case',
+)
+pw_v_cor['hgnc_symbol'] = gexp_verhaegh['hgnc_symbol']
+with plot.subplots(1, 1, figsize=(3, 2)) as (fig, ax):
+    plot.hist(
+        pw_v_cor['correlation'],
+        title="Histogram of the Pearson correlation between\n"
+              "the ER-factor and genes from Verhaegh et al.",
+        xlabel="Pearson correlation",
+        range=(-1, 1),
+        ax=ax,
+    )
+display_table(pw_v_cor.to_dataframe())
+```
+
+## Results on SET-Index Genes ##
+
+Table and histogram [^hist_set] of the Pearson correlation between the genes in
+the SET-index and the ER factor.
+
+[^hist_set]:
+    {-}
+    ![Histogram](figures/er-factor-correlations_correlation-set-index_1)
+
+```{python correlation-set-index, fig=False}
+pw_set_cor = util.cor(
+    gexp_set_index['log2_cpm'],
+    -sfa['factors'][0, :],
+    'case',
+)
+pw_set_cor['hgnc_symbol'] = gexp_set_index['hgnc_symbol']
+with plot.subplots(1, 1, figsize=(3, 2)) as (fig, ax):
+    plot.hist(
+        pw_set_cor['correlation'],
+        title="Histogram of the Pearson correlation between\n"
+              "the ER-factor and genes from the SET-index",
+        xlabel="Pearson correlation",
+        range=(-1, 1),
+        ax=ax,
+    )
+display_table(pw_set_cor.to_dataframe())
+```

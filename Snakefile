@@ -423,6 +423,12 @@ report_deps = {
         "src/reports/setup-matplotlib.py",
         "models/factors_from_mri/performance.nc",
     ],
+    "er-factor-correlations": [
+        "src/util.py",
+        "src/plot.py",
+        "src/reports/setup-matplotlib.py",
+        "data/external/set-index.tsv",
+    ]
 }
 
 rule weave_report:
