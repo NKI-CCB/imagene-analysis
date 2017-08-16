@@ -1,5 +1,5 @@
 ---
-title: Gene Set Enrichment Analysis of CAD features (Volume regressed out)
+title: Gene Set Enrichment Analysis of CAD features
 author: Tycho Bismeijer
 date: 2017-06-06
 ---
@@ -29,11 +29,9 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 ```
 
 ```{python load-gsea}
-df_h = load_gsea_ds("../analyses/gsea/mri-features-all-reg-volume_h.all_T.nc")
-df_cgp = load_gsea_ds("../analyses/gsea/"
-    "mri-features-all-reg-volume_c2.cgp_F.nc")
-df_cp = load_gsea_ds("../analyses/gsea/"
-    "mri-features-all-reg-volume_c2.cp_T.nc")
+df_h = load_gsea_ds("../analyses/gsea/mri-features-er_h.all_T.nc")
+df_cgp = load_gsea_ds("../analyses/gsea/mri-features-er_c2.cgp_F.nc")
+df_cp = load_gsea_ds("../analyses/gsea/mri-features-er_c2.cp_T.nc")
 ```
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that
@@ -63,12 +61,8 @@ table_ds(df_h, fdr=0.25)
 
 Gene signatures (c2.cgp) from MSigDB.
 
-```{python cgp-es-plot-a}
-plot_ds(df_cgp, fdr=0.25, le_prop=0.0, abs=False)
-```
-
-```{python cgp-es-plot-b}
-plot_ds(df_cgp, fdr=0.25, le_prop=0.8, abs=False)
+```{python cgp-es-plot}
+plot_ds(df_cgp, fdr=0.25, abs=False)
 ```
 
 ```{python cgp-table}

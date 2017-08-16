@@ -266,9 +266,12 @@ rule select_er:
 ########################################################################
 
 all_targets['features'] = [
-    "data/processed/mri-features.nc",
-    "data/processed/mri-features-reg-volume.nc",
-    "data/processed/mri-features-fa.nc",
+    "data/processed/mri-features-all.nc",
+    "data/processed/mri-features-all-reg-volume.nc",
+    "data/processed/mri-features-all-fa.nc",
+    "data/processed/mri-features-er.nc",
+    "data/processed/mri-features-er-reg-volume.nc",
+    "data/processed/mri-features-er-fa.nc",
 ]
 
 rule regress_out_volume:
@@ -381,10 +384,10 @@ rule gene_set_analysis_to_netcdf:
 ########################################################################
 
 
-all_targets['reports'] = ["reports/" + f for f in [
+all_targets['reports'] = [
     str(p.with_suffix(".html"))
-    for p in Path('notebooks').glob("*.pmd")
-]]
+    for p in Path('reports').glob("*.pmd")
+]
 
 
 gsea_deps = [
@@ -396,17 +399,19 @@ gsea_deps = [
 
 report_deps = {
     "gsea": [
-        "analyses/gsea/mri-features_h.all_T.nc",
+        "analyses/gsea/mri-features-all_c2.cgp_F.nc",
+        "analyses/gsea/mri-features-all_h.all_T.nc",
+        "analyses/gsea/mri-features-all_c2.cp_T.nc",
     ] + gsea_deps,
     "gsea-reg": [
-        "analyses/gsea/mri-features-reg-volume_c2.cgp_F.nc",
-        "analyses/gsea/mri-features-reg-volume_h.all_T.nc",
-        "analyses/gsea/mri-features-reg-volume_c2.cp_T.nc",
+        "analyses/gsea/mri-features-all-reg-volume_c2.cgp_F.nc",
+        "analyses/gsea/mri-features-all-reg-volume_h.all_T.nc",
+        "analyses/gsea/mri-features-all-reg-volume_c2.cp_T.nc",
     ] + gsea_deps,
     "gsea-fa": [
-        "analyses/gsea/mri-features-fa_c2.cgp_F.nc",
-        "analyses/gsea/mri-features-fa_h.all_T.nc",
-        "analyses/gsea/mri-features-fa_c2.cp_T.nc",
+        "analyses/gsea/mri-features-all-fa_c2.cgp_F.nc",
+        "analyses/gsea/mri-features-all-fa_h.all_T.nc",
+        "analyses/gsea/mri-features-all-fa_c2.cp_T.nc",
     ] + gsea_deps,
     "mri-remove-size": [
         "src/plot.py",
