@@ -239,6 +239,15 @@ rule process_gene_expression:
         "{config[python]} {input.script} {input.gexp} {input.sample_tracking} "
         "{input.gene_annot} {output}"
 
+rule process_gene_expression_voom:
+    input:
+        script="src/data/process_gene_expression_voom.py",
+        gexp="data/processed/gene-expression.nc"
+    output:
+        "data/processed/gene-expression-voom.nc"
+    shell:
+        "{config[python]} {input.script} {input.gexp} {output}"
+
 rule process_clincal:
     input:
         script="src/data/process_clinical.py",
