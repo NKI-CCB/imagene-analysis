@@ -32,6 +32,8 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 df_h = load_gsea_ds("../analyses/gsea/mri-features-all-fa_h.all_T.nc")
 df_h['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_h['mri_feature'].values])
+df_h['gene_set'] = ('gene_set',
+    [gs[9:] for gs in df_h['gene_set'].values])
 df_cgp = load_gsea_ds("../analyses/gsea/mri-features-all-fa_c2.cgp_F.nc")
 df_cgp['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_cgp['mri_feature'].values])
@@ -72,6 +74,7 @@ plot_ds(df_h, fdr=0.25)
 ```
 
 ```{python hallmarks-table}
+df_h
 table_ds(df_h, fdr=0.25)
 ```
 

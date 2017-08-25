@@ -269,6 +269,16 @@ rule select_er:
         "{config[python]} {input.script} {input.mri} --er-positive "
         "{input.clinical} {output}"
 
+rule concat_data_for_sfa:
+    input:
+        script="src/data/concat_data_sfa.py",
+        gexp="data/processed/gene-expression-voom.nc",
+        mri="data/processed/mri-features-all.nc",
+    output:
+        "data/processed/concat-data.nc",
+    shell:
+        "{config[python]} {input.script} {input.gexp} {input.mri} {output}"
+
 
 ########################################################################
 # FEATURES                                                             #
@@ -345,7 +355,29 @@ rule cross_validate_factors_from_mri:
         "{config[python]} {input.script} {input.mri} {input.sfa} "
         "{output}"
 
+rule run_sfa:
+    input:
+        script="src/models/run_sfa.py",
+        data="data/processed/concat-data.nc",
+    threads:
+        64
+    output:
+        "models/sfa_parameter_sweep.nc"
+    shell:
+        "{config[python]} {input.script} {input.data} {output} "
+        "--k 5 --l-gexp=-8:2:.25 --l-mri=-8:2:.25 --alpha=0.3:0.9:.1 "
+        "--eps 1e-3 --max-iter 10000 "
+        "--threads {threads}"
 
+rule eval_sfa:
+    input:
+        script="src/models/eval_sfa_bic.py",
+        models="models/sfa_parameter_sweep.nc",
+        data="data/processed/concat-data.nc",
+    output:
+        "models/sfa_parameter_sweep-bics.nc",
+    shell:
+        "{config[python]} {input.script} {input.models} {input.data} {output}"
 
 ########################################################################
 # ANALYSIS                                                             #
@@ -371,7 +403,7 @@ rule analyse_gene_sets:
     output:
         protected("analyses/gsea/{mri}_{gene_set}_{abs}.Rds"),
     threads:
-        100
+        4 # Takes a lot of memory
     shell:
         "mkdir -p analyses/gsea; "
         "{config[r]} {input.script} {input.gexp} {input.mri} "
