@@ -328,7 +328,7 @@ rule apply_tcga_sfa:
         conf="data/external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml",
         sfa_tcga="data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5",
     output:
-        "models/sfa/sfa.nc"
+        "models/sfa_tcga/sfa.nc"
     shell:
         "{config[python]} {input.script} {input.gexp} {input.sfa_tcga} "
         "{input.conf} {output}"
@@ -336,7 +336,7 @@ rule apply_tcga_sfa:
 rule cross_validate_mri_from_factors:
     input:
         script="src/models/cv_mri_from_factors.py",
-        sfa="models/sfa/sfa.nc",
+        sfa="models/sfa_tcga/sfa.nc",
         mri="data/processed/mri-features.nc",
     output:
         "models/mri_from_factors/performance.nc",
@@ -348,7 +348,7 @@ rule cross_validate_factors_from_mri:
     input:
         script="src/models/cv_factors_from_mri.py",
         mri="data/processed/mri-features.nc",
-        sfa="models/sfa/sfa.nc",
+        sfa="models/sfa_tcga/sfa.nc",
     output:
         "models/factors_from_mri/performance.nc",
     shell:
@@ -362,7 +362,7 @@ rule run_sfa:
     threads:
         64
     output:
-        "models/sfa_parameter_sweep.nc"
+        "models/sfa_mri_cad/parameter_sweep.nc"
     shell:
         "{config[python]} {input.script} {input.data} {output} "
         "--k 5 --l-gexp=-8:2:.25 --l-mri=-8:2:.25 --alpha=0.3:0.9:.1 "
@@ -372,10 +372,10 @@ rule run_sfa:
 rule eval_sfa:
     input:
         script="src/models/eval_sfa_bic.py",
-        models="models/sfa_parameter_sweep.nc",
+        models="models/sfa_mri_cad/parameter_sweep.nc",
         data="data/processed/concat-data.nc",
     output:
-        "models/sfa_parameter_sweep-bics.nc",
+        "models/sfa_mri_cad/parameter_sweep-bics.nc",
     shell:
         "{config[python]} {input.script} {input.models} {input.data} {output}"
 
