@@ -14,14 +14,15 @@ def calc_bic(deviance, degrees_of_freedom, n_samples):
 
 
 def dof_elastic_net(X, l2, B, eps=1e-6):
+    print(l2)
     df = 0.0
     for i in range(B.shape[0]):
-        active_set = B[i, :] > eps
+        active_set = (B[i, :] > eps) | (B[i, :] < -eps)
         if sum(active_set) == 0:
             continue
         X_a = X[active_set, :].T
-        df += np.trace(np.dot(np.dot(X_a, np.linalg.inv(np.dot(X_a.T, X_a) +
-                                     l2*np.identity(X_a.shape[1]))), X_a.T))
+        I = np.identity(X_a.shape[1])
+        df += np.trace(X_a @ np.linalg.inv(X_a.T @ X_a + l2*I) @ X_a.T)
     return(df)
 
 
