@@ -355,6 +355,38 @@ rule cross_validate_factors_from_mri:
         "{config[python]} {input.script} {input.mri} {input.sfa} "
         "{output}"
 
+
+rule run_sfa_gexp_sweep:
+    """Sweep penalty on gene expression data to determine range"""
+    input:
+        script="src/models/run_sfa.py",
+        data="data/processed/concat-data.nc",
+    threads:
+        64
+    output:
+        "models/sfa_mri_cad/gexp_sweep.nc"
+    shell:
+        "{config[python]} {input.script} {input.data} {output} "
+        "--k 5 --l-gexp=-15:5:.1 --l-mri=-15 --alpha=0.7 "
+        "--eps 1e-3 --max-iter 10000 "
+        "--threads {threads}"
+
+rule run_sfa_mri_sweep:
+    """Sweep penalty on MRI CAD data to determine range"""
+    input:
+        script="src/models/run_sfa.py",
+        data="data/processed/concat-data.nc",
+    threads:
+        64
+    output:
+        "models/sfa_mri_cad/mri_sweep.nc"
+    shell:
+        "{config[python]} {input.script} {input.data} {output} "
+        "--k 5 --l-gexp=-20 --l-mri=-25:10 --alpha=0.7 "
+        "--eps 1e-3 --max-iter 10000 "
+        "--threads {threads}"
+
+
 rule run_sfa:
     input:
         script="src/models/run_sfa.py",
@@ -372,10 +404,10 @@ rule run_sfa:
 rule eval_sfa:
     input:
         script="src/models/eval_sfa_bic.py",
-        models="models/sfa_mri_cad/parameter_sweep.nc",
+        models="models/sfa_mri_cad/{sweep}.nc",
         data="data/processed/concat-data.nc",
     output:
-        "models/sfa_mri_cad/parameter_sweep-bics.nc",
+        "models/sfa_mri_cad/{sweep}-bics.nc",
     shell:
         "{config[python]} {input.script} {input.models} {input.data} {output}"
 
@@ -474,6 +506,12 @@ report_deps = {
         "src/plot.py",
         "src/reports/setup-matplotlib.py",
         "data/external/set-index.tsv",
+    ],
+    "sfa-mg-parameter-sweeps": [
+        "src/plot.py",
+        "src/reports/setup-matplotlib.py",
+        "models/sfa_mri_cad/gexp_sweep-bics.nc",
+        "models/sfa_mri_cad/mri_sweep-bics.nc",
     ]
 }
 

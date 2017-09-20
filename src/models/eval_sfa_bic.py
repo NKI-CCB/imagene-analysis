@@ -14,7 +14,6 @@ def calc_bic(deviance, degrees_of_freedom, n_samples):
 
 
 def dof_elastic_net(X, l2, B, eps=1e-6):
-    print(l2)
     df = 0.0
     for i in range(B.shape[0]):
         active_set = (B[i, :] > eps) | (B[i, :] < -eps)
@@ -24,6 +23,10 @@ def dof_elastic_net(X, l2, B, eps=1e-6):
         I = np.identity(X_a.shape[1])
         df += np.trace(X_a @ np.linalg.inv(X_a.T @ X_a + l2*I) @ X_a.T)
     return(df)
+
+
+def sparsity(coeff, eps=1e-6):
+    return np.mean(np.abs(coeff) < eps)
 
 
 click_in_path = click.Path(exists=True, dir_okay=False, resolve_path=True)
@@ -54,6 +57,8 @@ def eval_sfa_bic(parameter_sweep, data, out):
              'alpha': xr.DataArray(nan_a.copy(), dims=['model']),
              'l_gexp': xr.DataArray(nan_a.copy(), dims=['model']),
              'l_mri': xr.DataArray(nan_a.copy(), dims=['model']),
+             'sparsity_gexp': xr.DataArray(nan_a.copy(), dims=['model']),
+             'sparsity_mri': xr.DataArray(nan_a.copy(), dims=['model']),
              'max_diff_coefficients': xr.DataArray(nan_a.copy(),
                                                    dims=['model']),
              'max_diff_factors': xr.DataArray(nan_a.copy(), dims=['model']),
@@ -95,6 +100,9 @@ def eval_sfa_bic(parameter_sweep, data, out):
                     dev_gexp + dev_mri,
                     dof_gexp + dof_mri + (Z.shape[0] * Z.shape[1]),
                     Z.shape[0])
+
+                out_ds['sparsity_gexp'].loc[model_id] = sparsity(B_gexp)
+                out_ds['sparsity_mri'].loc[model_id] = sparsity(B_mri)
 
                 out_ds['max_diff_coefficients'].loc[model_id] =\
                     model_g['monitor']['max_diff_coefficients'][-1]
