@@ -236,7 +236,7 @@ def run_sfa(data, out, k, alpha, l_gexp, l_mri, max_iter, eps, threads):
                 i/n_results,
                 res.params,
             ))
-            group_name = "M_" + "_".join([str(p) for p in res.params])
+            group_name = f"M_{i}"
             group = models.createGroup(group_name)
             write_result(res, group, zlib=True)
 
