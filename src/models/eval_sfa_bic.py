@@ -57,6 +57,8 @@ def eval_sfa_bic(parameter_sweep, data, out):
              'alpha': xr.DataArray(nan_a.copy(), dims=['model']),
              'l_gexp': xr.DataArray(nan_a.copy(), dims=['model']),
              'l_mri': xr.DataArray(nan_a.copy(), dims=['model']),
+             'k': xr.DataArray(np.full(len(models), -1, np.int8),
+                               dims=['model']),
              'sparsity_gexp': xr.DataArray(nan_a.copy(), dims=['model']),
              'sparsity_mri': xr.DataArray(nan_a.copy(), dims=['model']),
              'max_diff_coefficients': xr.DataArray(nan_a.copy(),
@@ -83,6 +85,8 @@ def eval_sfa_bic(parameter_sweep, data, out):
                 dev_mri = np.sum(np.square((mri - (Z @ B_mri))))
                 out_ds['deviance_mri'].loc[model_id] = dev_mri
 
+                k = model_g.getncattr('k')
+                out_ds['k'].loc[model_id] = k
                 alpha = model_g.getncattr('alpha')
                 out_ds['alpha'].loc[model_id] = alpha
                 l_gexp = model_g.getncattr('l_gexp')
