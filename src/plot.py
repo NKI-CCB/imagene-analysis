@@ -7,6 +7,7 @@ import matplotlib.cm
 import IPython.display
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 
@@ -322,6 +323,37 @@ def boxplot(x, y, *, ax, xlabel=None, ylabel=None, title=None):
         title = "Box plot"
     if title:
         ax.set_title(title)
+
+
+@_autoplot
+def lines(x, y=None, *, ax=None, color='black',
+          xlabel=None, ylabel=None,
+          **kwargs):
+    assert(ax is not None)
+    if y is None:
+        if isinstance(x, pd.Series):
+            x_ = x
+            x = np.array(x_.index)
+            y = np.array(x_)
+            if xlabel is None:
+                xlabel = x_.index.name
+            if ylabel is None:
+                ylabel = x_.name
+        elif isinstance(x, xr.DataArray):
+            assert len(x.shape) == 1
+            assert len(x.dims) == 1
+            x_ = x
+            x = np.array(x_.coords[x_.dims[0]])
+            y = x_.values
+            if xlabel is None:
+                xlabel = x_.dims[0]
+            if ylabel is None:
+                ylabel = x_.name
+        else:
+            raise NotImplementedError()
+
+    ax.plot(x, y, color=color)
+    _annotate(ax, xlabel=xlabel, ylabel=ylabel, **kwargs)
 
 
 @_autoplot
