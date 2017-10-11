@@ -386,7 +386,7 @@ rule run_sfa_mri_sweep:
         "--eps 1e-3 --max-iter 10000 "
         "--threads {threads}"
 
-rule run_sfa_grid_search:
+rule run_sfa_grid_search_coarse:
     """Sweep penalty on MRI CAD and RNA-seq"""
     input:
         script="src/models/run_sfa.py",
@@ -398,6 +398,21 @@ rule run_sfa_grid_search:
     shell:
         "{config[python]} {input.script} {input.data} {output} "
         "--k 2:10 --l-gexp=-13:1:1 --l-mri=-18:3:1 --alpha=0.1:.9:.2 "
+        "--eps 1e-3 --max-iter 10000 "
+        "--threads {threads}"
+
+rule run_sfa_grid_search_fine:
+    """Sweep penalty on MRI CAD and RNA-seq"""
+    input:
+        script="src/models/run_sfa.py",
+        data="data/processed/concat-data.nc",
+    threads:
+        128
+    output:
+        "models/sfa_mri_cad/parameter_sweep_fine.nc"
+    shell:
+        "{config[python]} {input.script} {input.data} {output} "
+        "--k 3 --l-gexp=-8:3:.5 --l-mri=-18:3:.5 --alpha=0.1:.9:.2 "
         "--eps 1e-3 --max-iter 10000 "
         "--threads {threads}"
 
