@@ -426,6 +426,17 @@ rule eval_sfa:
     shell:
         "{config[python]} {input.script} {input.models} {input.data} {output}"
 
+rule select_best_sfa:
+    input:
+        script="src/models/select_best_sfa.py",
+        models="models/sfa_mri_cad/{sweep}.nc",
+        bics="models/sfa_mri_cad/{sweep}-bics.nc",
+    output:
+        "models/sfa_mri_cad/{sweep}-best.nc",
+    shell:
+        "{config[python]} {input.script} {input.models} {input.bics} {output}"
+
+
 ########################################################################
 # ANALYSIS                                                             #
 ########################################################################
