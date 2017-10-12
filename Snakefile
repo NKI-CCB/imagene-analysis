@@ -477,6 +477,22 @@ rule gene_set_analysis_to_netcdf:
     shell:
         "{config[r]} {input.script} {input.rds} {output}"
 
+rule analyse_gene_sets_sfa:
+    input:
+        script="src/analysis/analyse-gene-set-enrichment-sfa.R",
+        gexp="data/processed/gene-expression.nc",
+        model="models/sfa_mri_cad/{sweep}-best.nc",
+        gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
+    output:
+        protected("analyses/gsea-sfa/{sweep}_{gene_set}_{abs}.Rds"),
+    threads:
+        4 # Takes a lot of memory
+    shell:
+        "mkdir -p analyses/gsea; "
+        "{config[r]} {input.script} {input.gexp} {input.model} "
+        "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
+        "--perms 10000"
+
 
 ########################################################################
 # REPORTS                                                              #
