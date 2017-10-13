@@ -495,7 +495,7 @@ rule analyse_gene_sets_sfa:
     output:
         protected("analyses/gsea-sfa/{sweep}_{gene_set}_{abs}.Rds"),
     threads:
-        4 # Takes a lot of memory
+        16
     shell:
         "mkdir -p analyses/gsea; "
         "{config[r]} {input.script} {input.gexp} {input.model} "
