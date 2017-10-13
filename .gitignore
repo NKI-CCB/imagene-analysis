@@ -75,6 +75,7 @@ target/
 
 # exclude data from source control
 /data/
+/data
 
 # exclude results from source control
 /models/
