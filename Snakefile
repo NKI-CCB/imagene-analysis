@@ -471,11 +471,20 @@ rule analyse_gene_sets:
 rule gene_set_analysis_to_netcdf:
     input:
         script="src/analysis/gsea-rds-to-nc.R",
-        rds="analyses/gsea/{name}.Rds",
+        rds="analyses/gsea{a}/{name}.Rds",
     output:
-        "analyses/gsea/{name}.nc",
+        "analyses/gsea{a,.*}/{name}.nc",
     shell:
         "{config[r]} {input.script} {input.rds} {output}"
+
+rule gene_set_analysis_to_xlsx:
+    input:
+        script="src/analysis/gsea-rds-to-xlsx.R",
+        rds="analyses/gsea{a}/{name}.Rds",
+    output:
+        "analyses/gsea{a,.*}/{name}.xlsx",
+    shell:
+        "{config[r]} {input.script} {input.rds} {output} .25 0.0"
 
 rule analyse_gene_sets_sfa:
     input:

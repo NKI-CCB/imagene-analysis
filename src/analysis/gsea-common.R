@@ -53,6 +53,22 @@ score_genes_limma <- function (x, y, abs=F) {
     }
 }
 
+# Gene scoring with limma for use in the gene set enrichment analysis
+score_genes_limma_independend <- function (x, y, abs=F) {
+    res = matrix(NA, nrow(x), ncol(y))
+    for (i in seq_len(ncol(y))) {
+        design <- stats::model.matrix(~ y[, i])
+        fit <- limma::lmFit(x, design)
+        fit <- limma::eBayes(fit)
+        res[, i] <- fit$t[, 2]
+    }
+    if (abs) {
+        abs(res)
+    } else {
+        res
+    }
+}
+
 run_gsea <- function(gexp_counts, y, gene_ids, gs_fn, nperm, abs,
                      n_threads) {
 
