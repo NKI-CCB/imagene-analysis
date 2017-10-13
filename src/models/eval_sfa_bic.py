@@ -43,6 +43,8 @@ def eval_sfa_bic(parameter_sweep, data, out):
     data = funcsfa.StackedDataMatrix.from_netcdf(data)
     gexp = data.dt('gexp')
     mri = data.dt('mri_cad')
+    n_samples = gexp.shape[0]
+    assert mri.shape[0] == n_samples
 
     with netCDF4.Dataset(parameter_sweep, 'r') as ds:
         models = list(ds['models'].groups)
@@ -80,9 +82,9 @@ def eval_sfa_bic(parameter_sweep, data, out):
                 B_gexp = np.array(model_g['coefficient_gexp'])
                 B_mri = np.array(model_g['coefficient_mri'])
                 Z = np.array(model_g['factor_value'])
-                dev_gexp = np.sum(np.square((gexp - (Z @ B_gexp))))
+                dev_gexp = np.sum(np.square((gexp - (Z @ B_gexp)))) / n_samples
                 out_ds['deviance_gexp'].loc[model_id] = dev_gexp
-                dev_mri = np.sum(np.square((mri - (Z @ B_mri))))
+                dev_mri = np.sum(np.square((mri - (Z @ B_mri)))) / n_samples
                 out_ds['deviance_mri'].loc[model_id] = dev_mri
 
                 k = model_g.getncattr('k')
