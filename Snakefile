@@ -502,6 +502,29 @@ rule analyse_gene_sets_sfa:
         "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
         "--perms 10000"
 
+n_pc_eigenbreasts = {
+    'contra_ds8': 12,
+}
+
+rule analyse_gene_sets_eigenbreasts:
+    input:
+        script="src/analysis/analyse-gene-set-enrichment-eigenbreasts.R",
+        gexp="data/processed/gene-expression.nc",
+        mri="data/processed/mri-eigenbreasts.nc",
+        gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
+    output:
+        protected("analyses/gsea/eigenbreasts_{mri_var}_{gene_set}_{abs}.Rds"),
+    params:
+        n_pc=lambda w: n_pc_eigenbreasts[w.mri_var]
+    threads:
+        4 # Takes a lot of memory
+    shell:
+        "mkdir -p analyses/gsea; "
+        "{config[r]} {input.script} {input.gexp} {input.mri} "
+        "{wildcards.mri_var} {params.n_pc} "
+        "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
+        "--perms 10000"
+
 
 ########################################################################
 # REPORTS                                                              #

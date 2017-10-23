@@ -70,7 +70,7 @@ score_genes_limma_independend <- function (x, y, abs=F) {
 }
 
 run_gsea <- function(gexp_counts, y, gene_ids, gs_fn, nperm, abs,
-                     n_threads) {
+                     n_threads, gene_score_fn=score_genes_limma) {
 
     stopifnot(colnames(gexp_counts) == colnames(y))
 
@@ -83,7 +83,7 @@ run_gsea <- function(gexp_counts, y, gene_ids, gs_fn, nperm, abs,
     gexp <- limma::voom(gexp_counts, design, plot=F)
 
     ggsea(gexp, t(y), gs_fn,
-        gene.score.fn=score_genes_limma,
+        gene.score.fn=gene_score_fn,
         gene.names=gene_ids,
         es.fn=ggsea_weighted_ks, sig.fun=ggsea_calc_sig,
         verbose=T, nperm=nperm, block.size=64, abs=abs,
