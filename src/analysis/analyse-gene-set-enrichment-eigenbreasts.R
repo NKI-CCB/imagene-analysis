@@ -11,27 +11,17 @@ library(ggsea)
 
 source('src/analysis/gsea-common.R')
 
-read_mri <- function(fn) {
+read_mri <- function(fn, variable, k) {
     ds <- nc_open(fn)
     on.exit({nc_close(ds)})
 
-    if ('factors' %in% names(ds$var)) {
-        mri_mat = nc_read_matrix(ds, 'factors')
-    } else {
-        mri <- nc_read_data_frame(ds, 'case')
-        # Integer variables as index are not funny in R, so we make it character.
-        mri$case <- as.character(mri$case)
-        mri$MultiFocal <- NULL
-        mri_mat <- t(as.matrix(mri[, sapply(mri, is.numeric)]))
-        dimnames(mri_mat) <- list(
-            mri_feature=rownames(mri_mat),
-            case=mri$case)
-    }
-    mri_mat
+    ds_mat <- nc_read_matrix(ds, variable)
+    t(ds_mat[, 1:k])
 }
 
 parse_args <- function() {
-    args <- c('gene_expression', 'mri', 'gene_sets', 'out')
+    args <- c('gene_expression', 'mri', 'mri_variable', 'pc_number',
+              'gene_sets', 'out')
     option_list <- list(
         make_option("--threads", default=1L, help="Number of threads"),
         make_option("--perms", default=1000L, help="Number of permutations"),
@@ -52,7 +42,8 @@ main <- function(args) {
     }
 
     gexp <- read_gexp(args$gene_expression)
-    mri <- read_mri(args$mri)
+    mri <- read_mri(args$mri, args$mri_variable, args$pc_number)
+    str(mri)
 
     # Select data with no missing values
     sel_samples <- names(which(colSums(is.na(mri)) == 0)) 
@@ -62,7 +53,7 @@ main <- function(args) {
 
     res <- run_gsea(gexp$read_count, mri, gexp$entrez_gene, args$gene_sets,
                     nperm=args$perms, abs=args$abs, n_threads=args$threads,
-                    gene_score_fn=score_genes_limma_independend)
+                    gene_score_fn=score_genes_limma)
     saveRDS(res, args$out)
 
 }
