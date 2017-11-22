@@ -1,0 +1,89 @@
+---
+title: Gene Set Enrichment Analysis of Eigenbreasts
+author: Tycho Bismeijer
+date: 2017-11-10
+---
+
+## Setup ## {.collapsed}
+
+Load libraries.
+
+```{python import_libs}
+from IPython.display import display, Markdown
+import numpy as np
+import pandas as pd
+from tabulate import tabulate
+import xarray as xr
+
+import plot
+```
+
+Setup style of plots.
+
+```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
+```
+
+Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
+
+```{python load-gsea-fun, source="src/reports/load-gsea-fun.py"}
+```
+
+```{python load-gsea}
+feature_set = 'eigenbreasts_contra_ds8'
+df_h = load_gsea_ds(f"../analyses/gsea/{feature_set}_h.all_T.nc")
+df_h['mri_feature'] = ('mri_feature',
+    ["PC{}".format(i) for i in df_h['mri_feature'].values])
+df_cgp = load_gsea_ds(f"../analyses/gsea/{feature_set}_c2.cgp_F.nc")
+df_cgp['mri_feature'] = ('mri_feature',
+    ["PC{}".format(i) for i in df_cgp['mri_feature'].values])
+df_cp = load_gsea_ds(f"../analyses/gsea/{feature_set}_c2.cp_T.nc")
+df_cp['mri_feature'] = ('mri_feature',
+    ["PC{}".format(i) for i in df_cp['mri_feature'].values])
+```
+
+A function to plot a heatmap with normalized enrichment statistics (NES) that
+are significant.
+
+```{python es-heatmap-fun, source="src/reports/es-heatmap-fun.py"}
+```
+
+A utility function to display tables with [DataTables](https://datatables.net).
+And a function to show significant pathway enrichments in a table.
+
+```{python es-table-fun, source="src/reports/es-table-fun.py"}
+```
+
+
+## Results ##
+
+### GSEA ###
+
+Hallmarks from MSigDB.
+
+```{python hallmarks-es-plot}
+plot_ds(df_h, fdr=0.25)
+```
+
+```{python hallmarks-table}
+table_ds(df_h, fdr=0.25)
+```
+
+Gene signatures (c2.cgp) from MSigDB.
+
+```{python cgp-es-plot-a}
+plot_ds(df_cgp, fdr=0.25, le_prop=0.0, abs=False)
+```
+
+```{python cgp-table}
+table_ds(df_cgp, fdr=0.25)
+```
+
+Pathways (c2.cp) from MSigDB.
+
+```{python cp-es-plot}
+plot_ds(df_cp, fdr=0.25, le_prop=0.0)
+```
+
+```{python cp-table}
+table_ds(df_cp, fdr=0.25)
+```

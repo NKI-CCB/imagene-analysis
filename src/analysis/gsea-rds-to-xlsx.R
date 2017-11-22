@@ -26,9 +26,9 @@ gsea_rds_to_xlsx <- function(gsea_rds, out, max_fdr, min_le_prop) {
     for (factor_name in names(gsea_table)) {
         worksheet_index <- openxlsx::addWorksheet(workbook, factor_name)
         filtered_table <- gsea_table[[factor_name]] %>%
-            filter(fdr < max_fdr, le_prop >= min_le_prop) %>%
+            filter(fdr <= max_fdr, le_prop >= min_le_prop) %>%
             arrange(-le_prop) %>%
-            select(-p, -fwer, -es)
+            select(-fwer, -es)
         if (nrow(filtered_table) > 0) {
             filtered_table$link = paste0(
                 '=HYPERLINK("', msigdb_prefix, filtered_table$GeneSet,

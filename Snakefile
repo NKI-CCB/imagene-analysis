@@ -520,8 +520,8 @@ rule analyse_gene_sets_eigenbreasts:
         4 # Takes a lot of memory
     shell:
         "mkdir -p analyses/gsea; "
-        "{config[r]} {input.script} {input.gexp} {input.mri} "
-        "{wildcards.mri_var} {params.n_pc} "
+        "OPENBLAS_NUM_THREADS=1 {config[r]} {input.script} {input.gexp} "
+        "{input.mri} {wildcards.mri_var} {params.n_pc} "
         "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
         "--perms 10000"
 

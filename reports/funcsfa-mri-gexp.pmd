@@ -1,0 +1,41 @@
+---
+title: FuncSFA results
+author: Tycho Bismeijer
+date: 2017-10-13
+---
+
+## Setup ## {.collapsed}
+
+```{python import-libs}
+from IPython.display import display
+import matplotlib
+import matplotlib.markers
+import matplotlib.pyplot as plt
+import seaborn
+import xarray as xr
+
+import plot
+```
+
+Setup plotting style.
+```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
+```
+
+Load funcsfa solution.
+```{python load-sol}
+sol_ds = xr.open_dataset("../models/sfa_mri_cad/parameter_sweep_fine-best.nc")
+```
+
+## Factor Correlations ##
+
+```{python factor-cor-plot}
+factor_df = sol_ds['factor_value'].to_dataframe().unstack('factor')
+g = seaborn.PairGrid(factor_df)
+g.map_offdiag(
+    plt.scatter,
+    facecolors='none',
+)
+g.map_diag(plt.hist)
+display(g.fig)
+plt.close(g.fig)
+```
