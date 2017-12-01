@@ -42,6 +42,10 @@ df_cp['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_cp['mri_feature'].values])
 ```
 
+```{python load-differential-expression}
+de = xr.open_dataset("../analyses/de/mri-features-all-fa.nc")
+```
+
 A function to plot a heatmap with normalized enrichment statistics (NES) that
 are significant.
 
@@ -104,4 +108,22 @@ plot_ds(df_cp, fdr=0.05, le_prop=0.8)
 
 ```{python cp-table}
 table_ds(df_cp, fdr=0.25)
+```
+
+### Differential Expression ###
+
+```{python de}
+for mri_idx in range(de.dims['mri_feature']):
+    mri_f = de['mri_feature'][mri_idx].values.item().decode()
+    gene_rank = de['t'][mri_idx, :].argsort()
+    sel_genes = list(gene_rank[0:250]) + list(gene_rank[-250:])
+
+    df = pd.DataFrame({
+        "coefficient": de['coefficient'][mri_idx, sel_genes].to_pandas(),
+        "t": de['t'][mri_idx, sel_genes].to_pandas(),
+        "gene symbol": de['hgnc_symbol'][sel_genes],
+    })
+    df.name = mri_f
+    display(Markdown(f"*{mri_f}*"))
+    display_table(df)
 ```

@@ -34,9 +34,11 @@ read_gexp <- function(fn) {
     read_count <- nc_read_matrix(ds, 'read_count')
     entrez_gene <- ncvar_get(ds, 'entrez_gene_id')
     entrez_gene <- as.character(entrez_gene)
+    hgnc_symbol <- ncvar_get(ds, 'hgnc_symbol')
 
     list(
          read_count=read_count,
+         hgnc_symbol=hgnc_symbol,
          entrez_gene=entrez_gene)
 }
 

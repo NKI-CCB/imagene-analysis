@@ -27,7 +27,7 @@ def _autoplot(f):
             if fig is not None:
                 disp(fig)
         finally:
-            if fig is not None:
+            if fig is not None and not matplotlib.is_interactive():
                 matplotlib.pyplot.close(fig)
 
     return autoplot_wrapper
