@@ -6,7 +6,6 @@ from pathlib import Path
 import click
 import dotenv
 import requests
-import snakemake.remote.SFTP
 
 # Configuration of executable names etc.
 configfile: "config/snakemake.yaml"

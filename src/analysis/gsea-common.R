@@ -42,35 +42,6 @@ read_gexp <- function(fn) {
          entrez_gene=entrez_gene)
 }
 
-# Gene scoring with limma for use in the gene set enrichment analysis
-score_genes_limma <- function (x, y, abs=F) {
-    design <- stats::model.matrix(~ ., as.data.frame(y))
-    fit <- limma::lmFit(x, design)
-    fit <- limma::eBayes(fit)
-    res <- fit$t[,2:ncol(fit$t), drop=F]
-    if (abs) {
-        abs(res)
-    } else {
-        res
-    }
-}
-
-# Gene scoring with limma for use in the gene set enrichment analysis
-score_genes_limma_independend <- function (x, y, abs=F) {
-    res = matrix(NA, nrow(x), ncol(y))
-    for (i in seq_len(ncol(y))) {
-        design <- stats::model.matrix(~ y[, i])
-        fit <- limma::lmFit(x, design)
-        fit <- limma::eBayes(fit)
-        res[, i] <- fit$t[, 2]
-    }
-    if (abs) {
-        abs(res)
-    } else {
-        res
-    }
-}
-
 run_gsea <- function(gexp_counts, y, gene_ids, gs_fn, nperm, abs,
                      n_threads, gene_score_fn=score_genes_limma) {
 
@@ -82,10 +53,10 @@ run_gsea <- function(gexp_counts, y, gene_ids, gs_fn, nperm, abs,
     gexp_dge <- edgeR::DGEList(gexp_counts)
     gexp_dge <- edgeR::calcNormFactors(gexp_dge, method='TMM')
     design <- stats::model.matrix(~ ., as.data.frame(t(y)))
-    gexp <- limma::voom(gexp_counts, design, plot=F)
+    gexp <- limma::voom(gexp_dge, design, plot=F)
 
-    ggsea(gexp, t(y), gs_fn,
-        gene.score.fn=gene_score_fn,
+    ggsea(gexp, design, gs_fn,
+        gene.score.fn=ggsea_limma,
         gene.names=gene_ids,
         es.fn=ggsea_weighted_ks, sig.fun=ggsea_calc_sig,
         verbose=T, nperm=nperm, block.size=64, abs=abs,
