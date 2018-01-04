@@ -36,7 +36,7 @@ Setup plotting style.
 
 Load factors.
 ```{python load-factors}
-sfa = xr.open_dataset('../models/sfa/sfa.nc')
+sfa = xr.open_dataset('../models/sfa_tcga/sfa.nc')
 ```
 
 Load gene expression data.
