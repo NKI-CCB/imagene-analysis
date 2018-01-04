@@ -1,0 +1,64 @@
+---
+title: MRI features and subtypes
+author: Tycho Bismeijer
+date: 2018-01-04
+---
+
+## Setup ## {.collapsed}
+
+```python load-libs
+from IPython.display import display, Markdown
+import numpy as np
+import pandas as pd
+import seaborn
+import xarray as xr
+
+import plot
+```
+
+Setup style of plots.
+
+```python setup-seaborn
+seaborn.set()
+seaborn.set_style('ticks')
+seaborn.set_palette('Set2')
+```
+
+```python setup-matplotlib, source="src/reports/setup-matplotlib.py"
+```
+
+```python util_funcs
+def display_table(t, fullwidth=False, floatfmt=".2f"):
+    from tabulate import tabulate
+
+    classes = ['datatable']
+    if fullwidth:
+        classes.append('fullwidth')
+
+    table_md = tabulate(t, headers='keys', showindex=False, floatfmt=floatfmt)
+    display(Markdown(
+        '<div class="{classes}">{table_md}\n\n</div>'
+        .format(classes=" ".join(classes), table_md=table_md),
+    ))
+```
+
+```python load_fa
+fa_ds = xr.open_dataset("data/processed/mri-features-all-fa.nc").load()
+```
+
+```python load_clinical
+clin_ds = xr.open_dataset("data/processed/clinical.nc").load()
+clin_ds = clin_ds.reindex_like(fa_ds)
+print(clin_ds)
+```
+
+## Results ##
+
+```python scatterplot
+for factor in fa_ds['factor']:
+    with plot.subplots() as (fig, ax):
+        x = clin_ds['ihc_subtype'].to_series()
+        y = fa_ds['factors'].sel(factor=factor).to_series()
+        y.name = "Factor_" + str(factor.values.item())
+        seaborn.boxplot(x, y, ax=ax)
+```
