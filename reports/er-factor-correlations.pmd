@@ -36,17 +36,17 @@ Setup plotting style.
 
 Load factors.
 ```{python load-factors}
-sfa = xr.open_dataset('../models/sfa_tcga/sfa.nc')
+sfa = xr.open_dataset("models/sfa_tcga/sfa.nc")
 ```
 
 Load gene expression data.
 ```{python load-gexp}
-gexp = xr.open_dataset("../data/processed/gene-expression.nc")
+gexp = xr.open_dataset("data/processed/gene-expression.nc")
 ```
 
 Load clinical annotation with IHC subtype.
 ```{python load-gexp}
-clin = xr.open_dataset("../data/processed/clinical.nc")
+clin = xr.open_dataset("data/processed/clinical.nc")
 ```
 
 ### Select ER+ samples ###
@@ -79,7 +79,7 @@ gexp_verhaegh = gexp.loc[{
 
 Genes from supplemental tables S1 and S2 of Fraser Symmans et al.
 ```{python set-index-genes}
-set_index = pd.read_table('../data/external/set-index.tsv')
+set_index = pd.read_table("data/external/set-index.tsv")
 set_index_genes = list(set_index['gene'])
 assert all(g in gexp['hgnc_symbol'].values for g in set_index_genes)
 gexp_set_index = gexp.loc[{

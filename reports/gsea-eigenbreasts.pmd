@@ -30,13 +30,13 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 
 ```{python load-gsea}
 feature_set = 'eigenbreasts_contra_ds8'
-df_h = load_gsea_ds(f"../analyses/gsea/{feature_set}_h.all_T.nc")
+df_h = load_gsea_ds(f"analyses/gsea/{feature_set}_h.all_T.nc")
 df_h['mri_feature'] = ('mri_feature',
     ["PC{}".format(i) for i in df_h['mri_feature'].values])
-df_cgp = load_gsea_ds(f"../analyses/gsea/{feature_set}_c2.cgp_F.nc")
+df_cgp = load_gsea_ds(f"analyses/gsea/{feature_set}_c2.cgp_F.nc")
 df_cgp['mri_feature'] = ('mri_feature',
     ["PC{}".format(i) for i in df_cgp['mri_feature'].values])
-df_cp = load_gsea_ds(f"../analyses/gsea/{feature_set}_c2.cp_T.nc")
+df_cp = load_gsea_ds(f"analyses/gsea/{feature_set}_c2.cp_T.nc")
 df_cp['mri_feature'] = ('mri_feature',
     ["PC{}".format(i) for i in df_cp['mri_feature'].values])
 ```

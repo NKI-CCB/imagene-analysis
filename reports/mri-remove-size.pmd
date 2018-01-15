@@ -29,7 +29,7 @@ Setup style of plots.
 Load MRI CAD features.
 
 ```{python load-mri}
-mri_ds = xr.open_dataset('../data/processed/mri-features.nc')
+mri_ds = xr.open_dataset('data/processed/mri-features.nc')
 del mri_ds['Comment']
 del mri_ds['MultiFocal']
 mri = mri_ds.to_array('cad_feature', 'mri_cad_features')

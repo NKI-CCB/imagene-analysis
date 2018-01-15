@@ -29,13 +29,13 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 ```
 
 ```{python load-gsea}
-df_h = load_gsea_ds("../analyses/gsea/mri-features-all_h.all_T.nc")
-df_cgp = load_gsea_ds("../analyses/gsea/mri-features-all_c2.cgp_F.nc")
-df_cp = load_gsea_ds("../analyses/gsea/mri-features-all_c2.cp_T.nc")
+df_h = load_gsea_ds("analyses/gsea/mri-features-all_h.all_T.nc")
+df_cgp = load_gsea_ds("analyses/gsea/mri-features-all_c2.cgp_F.nc")
+df_cp = load_gsea_ds("analyses/gsea/mri-features-all_c2.cp_T.nc")
 ```
 
 ```{python load-differential-expression}
-de = xr.open_dataset("../analyses/de/mri-features-all.nc")
+de = xr.open_dataset("analyses/de/mri-features-all.nc")
 ```
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that

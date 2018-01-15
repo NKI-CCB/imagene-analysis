@@ -21,8 +21,8 @@ import plot
 ```
 
 ```{python set-vars}
-m_bic_pth = Path("../models/sfa_mri_cad/mri_sweep-bics.nc")
-g_bic_pth = Path("../models/sfa_mri_cad/gexp_sweep-bics.nc")
+m_bic_pth = Path("models/sfa_mri_cad/mri_sweep-bics.nc")
+g_bic_pth = Path("models/sfa_mri_cad/gexp_sweep-bics.nc")
 ```
 
 ```{python load-bics}

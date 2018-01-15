@@ -23,7 +23,7 @@ Setup plotting style.
 
 Load funcsfa solution.
 ```{python load-sol}
-sol_ds = xr.open_dataset("../models/sfa_mri_cad/parameter_sweep_fine-best.nc")
+sol_ds = xr.open_dataset("models/sfa_mri_cad/parameter_sweep_fine-best.nc")
 ```
 
 ## Factor Correlations ##

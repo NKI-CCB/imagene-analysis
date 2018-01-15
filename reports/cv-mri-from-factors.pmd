@@ -44,7 +44,7 @@ def display_table(t, fullwidth=False, floatfmt=".2f"):
 ```
 
 ```{python load-data}
-perf = xr.open_dataset('../models/mri_from_factors/performance.nc')
+perf = xr.open_dataset('models/mri_from_factors/performance.nc')
 ```
 
 ## Results ##
