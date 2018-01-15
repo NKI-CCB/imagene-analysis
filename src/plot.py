@@ -20,15 +20,18 @@ def _autoplot(f):
     @wraps(f)
     def autoplot_wrapper(*args, ax=None, disp=display, **kwargs):
         fig = None
+        res = None
         if ax is None:
             fig, ax = matplotlib.pyplot.subplots()
         try:
-            f(*args, ax=ax, **kwargs)
+            res = f(*args, ax=ax, **kwargs)
             if fig is not None:
                 disp(fig)
         finally:
             if fig is not None and not matplotlib.is_interactive():
                 matplotlib.pyplot.close(fig)
+
+        return res
 
     return autoplot_wrapper
 
@@ -47,8 +50,10 @@ def figure(*args, **kwargs):
 def subplots(*args, **kwargs):
     fig, axs = matplotlib.pyplot.subplots(*args, **kwargs)
     yield fig, axs
-    display(fig)
-    matplotlib.pyplot.close(fig)
+    try:
+        display(fig)
+    finally:
+        matplotlib.pyplot.close(fig)
 
 
 def _infer_set_ticklabels(ticklabels):
@@ -85,6 +90,7 @@ def _annotate(ax, xlabel=None, ylabel=None, xscale='linear', yscale='linear',
 def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
             yticklabels=None,
             xlabel=None, ylabel=None, zlabel=None, zlim=None,
+            origin='upper', aspect='auto',
             row_dendrogram=False, row_dist_metric='euclidean',
             row_cluster_method='average', col_dendrogram=False,
             col_dist_metric='euclidean', col_cluster_method='average',
@@ -150,8 +156,8 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         if cmap is None:
             cmap = 'coolwarm'
 
-    c = ax.imshow(Zo, cmap=cmap, origin='lower', interpolation='none',
-                  aspect='auto', vmin=zlim[0], vmax=zlim[1])
+    c = ax.imshow(Zo, cmap=cmap, origin=origin, interpolation='none',
+                  aspect=aspect, vmin=zlim[0], vmax=zlim[1])
     if cbar:
         cbar = ax.figure.colorbar(c)
 
@@ -177,6 +183,11 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         ax.set_xlabel(xlabel)
     if ylabel is not None:
         ax.set_ylabel(ylabel)
+
+    if cbar:
+        return (c, cbar)
+    else:
+        return c
 
 
 # From an example at:

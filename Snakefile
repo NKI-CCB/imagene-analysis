@@ -640,6 +640,19 @@ rule convert_notebook_to_html:
 
 
 ########################################################################
+# FIGURES                                                              #
+########################################################################
+
+rule figure_mri_cad_correlation:
+    input:
+        script="src/visualization/figure-mri-cad-correlation.py",
+        cad_features="data/processed/mri-features.nc",
+    output: "reports/figures/mri-cad-correlation.svg"
+    shell:
+        "{config[python]} {input.script} {input.cad_features} {output}"
+
+
+########################################################################
 # INTERACTIVE                                                          #
 ########################################################################
 
