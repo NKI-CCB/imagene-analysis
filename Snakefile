@@ -48,6 +48,7 @@ rule all_notebooks:
 all_targets['data'] = [
     "data/processed/gene-expression.nc",
     "data/processed/mri-features-all.nc",
+    "data/processed/mri-features-er.nc",
     "data/processed/mri-eigenbreasts.nc",
     "data/processed/clinical.nc",
 ]
@@ -58,14 +59,15 @@ all_targets['data'] = [
 
 # Project data on remote share #
 
-def download_rhpc(remotefile, dest):
-    root = "harris.rhpc.nki.nl:/DATA/t.bismeijer/Store/Imagene/"
+def download_scp(remotefile, dest):
+    root = config['download_root'] 
     shell(f"""
         scp {root}{remotefile} {dest}
         touch {dest}
     """)
 
-download = download_rhpc
+download_funcs = {'download_scp': download_scp}
+download = download_funcs[config['download_func']]
 
 rule download_gene_expression:
     output: "data/raw/gene-expression.nc"

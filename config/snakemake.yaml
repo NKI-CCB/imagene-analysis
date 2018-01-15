@@ -1,6 +1,13 @@
+# Command-line programs to use.
 python: python3
 r: Rscript
+pandoc: pandoc
+# The appropiate version PWeave and jupyter are normally installed into the
+# virtual environment.
 pweave: pweave
 pweave: pweave
 nbconvert: jupyter nbconvert
-pandoc: pandoc
+
+# How to download the data.
+download_func: download_scp
+download_root: "harris.rhpc.nki.nl:/DATA/t.bismeijer/Store/Imagene/"
