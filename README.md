@@ -67,6 +67,7 @@ Project Organization
     │
     ├── reports            <- Analysis reports, such as pweave or rmarkdown reports.
     │   └── figures        <- Generated graphics and figures to be used in reporting.
+    ├── figures            <- Figures for in the manuscript.
     │
     ├── venv/              <- Suggested directory for virtual environment
     │

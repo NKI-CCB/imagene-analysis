@@ -30,6 +30,8 @@ rule all_data:
     input: lambda _: all_targets['data']
 rule all_reports:
     input: lambda _: all_targets['reports']
+rule all_figures:
+    input: lambda _: all_targets['figures']
 rule all_features:
     input: lambda _: all_targets['features']
 rule all_models:
@@ -643,11 +645,16 @@ rule convert_notebook_to_html:
 # FIGURES                                                              #
 ########################################################################
 
+all_targets['figures'] = [
+    "figures/mri-cad-correlation.svg",
+]
+
+
 rule figure_mri_cad_correlation:
     input:
         script="src/visualization/figure-mri-cad-correlation.py",
         cad_features="data/processed/mri-features.nc",
-    output: "reports/figures/mri-cad-correlation.svg"
+    output: "figures/mri-cad-correlation.svg"
     shell:
         "{config[python]} {input.script} {input.cad_features} {output}"
 
