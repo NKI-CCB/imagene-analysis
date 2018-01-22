@@ -1,15 +1,16 @@
 ---
 title: ER pathway and other ER signatures in ER+ samples.
 author: Tycho Bismeijer
-date: 2017-08-14
+date: 2017-08-14--2018-01-19
 ---
 
 ## Setup ## {.collapsed}
 
-```{python import-libs}
+```python import-libs
 from IPython.display import display, Markdown
 import numpy as np
 import pandas as pd
+import scipy
 import seaborn
 from tabulate import tabulate
 import xarray as xr
@@ -19,7 +20,7 @@ import util
 ```
 
 Function to nicely display a table.
-```{python util-funcs}
+```python util-funcs
 def display_table(t):
     display(Markdown(
         '<div class="datatable">' +
@@ -35,23 +36,24 @@ Setup plotting style.
 ### Load Data ###
 
 Load factors.
-```{python load-factors}
+```python load-factors
 sfa = xr.open_dataset("models/sfa_tcga/sfa.nc")
 ```
 
 Load gene expression data.
-```{python load-gexp}
+```python load-gexp
 gexp = xr.open_dataset("data/processed/gene-expression.nc")
+print(gexp)
 ```
 
 Load clinical annotation with IHC subtype.
-```{python load-gexp}
+```python load-clin
 clin = xr.open_dataset("data/processed/clinical.nc")
 ```
 
 ### Select ER+ samples ###
 
-```{python select-er-pos}
+```python select-er-pos
 sel_cases = set(clin['case'][clin['ihc_subtype'] == 'ER+/HER2-'].values)
 sel_cases &= set(gexp['case'].values)
 sel_cases &= set(sfa['case'].values)
@@ -64,7 +66,7 @@ gexp = gexp.reindex(case=sel_cases)
 ### Select ER pathway genes ###
 
 Genes from supplemental table S2 of Verhaegh et al.
-```{python verhaegh-genes}
+```python verhaegh-genes
 verhaegh_genes = [
     'AP1B1', 'CA12', 'CDH26', 'CELSR2', 'COL18A1', 'COX7A2L', 'CTSD',
     'DSCAM', 'EBAG9', 'ERBB2', 'ESR1', 'GREB1', 'HSPB1', 'IGFBP4', 'KRT19',
@@ -78,13 +80,24 @@ gexp_verhaegh = gexp.loc[{
 ```
 
 Genes from supplemental tables S1 and S2 of Fraser Symmans et al.
-```{python set-index-genes}
+```python set-index-genes
 set_index = pd.read_table("data/external/set-index.tsv")
 set_index_genes = list(set_index['gene'])
 assert all(g in gexp['hgnc_symbol'].values for g in set_index_genes)
 gexp_set_index = gexp.loc[{
     'gene': (np.isin(gexp['hgnc_symbol'], set_index_genes)),
 }]
+```
+
+Genes from supplemental table S2 of Zwart et al (2011)
+```python zwart-er-genes
+zwart_er = pd.read_csv("data/external/zwart2011/er_responsive_genes.tsv",
+                       sep='\t')
+zwart_er_genes = [g for g in set(zwart_er['ensembl_id']) if g]
+gexp_er_responsive = gexp.loc[{
+    'gene': (np.isin(gexp['gene'], zwart_er_genes)),
+}]
+
 ```
 
 ## Results on Verhaegh et al. ER Pathway Genes ##
@@ -97,7 +110,7 @@ and MYC, which are part of other oncogenic pathways.
     {-}
     ![Histogram](figures/er-factor-correlations_correlation-verhaegh_1)
 
-```{python correlation-verhaegh, fig=False}
+```python correlation-verhaegh, fig=False
 pw_v_cor = util.cor(
     gexp_verhaegh['log2_cpm'],
     -sfa['factors'][0, :],
@@ -125,7 +138,7 @@ the SET-index and the ER factor.
     {-}
     ![Histogram](figures/er-factor-correlations_correlation-set-index_1)
 
-```{python correlation-set-index, fig=False}
+```python correlation-set-index, fig=False
 pw_set_cor = util.cor(
     gexp_set_index['log2_cpm'],
     -sfa['factors'][0, :],
@@ -143,3 +156,56 @@ with plot.subplots(1, 1, figsize=(3, 2)) as (fig, ax):
     )
 display_table(pw_set_cor.to_dataframe())
 ```
+
+
+## ER Targets ##
+
+Table and histogram [^hist_err] of the Pearson correlation between the ER
+targets and the ER factor.
+
+[^hist_err]:
+    {-}
+    ![Histogram](figures/er-factor-correlations_er-target-correlation_1)
+
+```python er-target-correlation, fig=False
+pw_err_cor = util.cor(
+    gexp_er_responsive['log2_cpm'],
+    -sfa['factors'][0, :],
+    'case',
+)
+pw_err_cor['hgnc_symbol'] = gexp_er_responsive['hgnc_symbol']
+with plot.subplots(1, 1, figsize=(3, 2)) as (fig, ax):
+    plot.hist(
+        pw_set_cor['correlation'],
+        title="Histogram of the Pearson correlation between\n"
+              "the ER-factor and ER responsive genes",
+        xlabel="Pearson correlation",
+        range=(-1, 1),
+        ax=ax,
+    )
+display_table(pw_err_cor.to_dataframe())
+```
+
+```python er-target-mean-correlation
+rho, rho_p = scipy.stats.pearsonr(
+    gexp_er_responsive['log2_cpm'].mean('gene'),
+    -sfa['factors'][0, :],
+)
+r, r_p = scipy.stats.spearmanr(
+    gexp_er_responsive['log2_cpm'].mean('gene'),
+    -sfa['factors'][0, :],
+)
+with plot.subplots(1, 1, figsize=(5, 5)) as (fig, ax):
+    plot.scatter(
+        gexp_er_responsive['log2_cpm'].mean('gene'),
+        -sfa['factors'][0, :],
+        xlabel="Average ER target expression",
+        ylabel="ER Factor",
+        ax=ax,
+    )
+```
+
+The mean of the ESR1 targets is correlated with the ER factor
+(ρ=<%print(f"{rho:.2}")%>, p=<%print(f"{rho_p:.2}")%>),
+also on ranks
+(r=<%print(f"{r:.2}")%>, p=<%print(f"{r_p:.2}")%>).

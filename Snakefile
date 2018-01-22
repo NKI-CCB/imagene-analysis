@@ -62,7 +62,7 @@ all_targets['data'] = [
 # Project data on remote share #
 
 def download_scp(remotefile, dest):
-    root = config['download_root'] 
+    root = config['download_root']
     shell(f"""
         scp {root}{remotefile} {dest}
         touch {dest}
@@ -151,10 +151,47 @@ rule unzip_msigdb:
         "{wildcards.gene_set}.v5.2.{wildcards.gene_ids}.gmt > {output}\n"
         "touch {output}"
 
+rule download_zwart2011_er_signature:
+    output: "data/external/zwart2011/table_S2.xls"
+    params:
+        url="http://emboj.embopress.org/content/embojnl/30/23/4764/DC3/embed/"
+            "inline-supplementary-material-3.xls?download=true"
+
+    shell:
+        "mkdir -p data/external/zwart2011/\n"
+        "curl {params.url} -o {output}"
+
+rule download_refseq_annotation:
+    output: "data/external/refseq/rna.gbk.gz"
+    params:
+        url="ftp://ftp.ncbi.nlm.nih.gov/genomes/Homo_sapiens/"
+            "GRCh38.p10_interim_annotation/interim_GRCh38.p10_rna.gbk.gz",
+    shell:
+        "mkdir -p data/external/refseq/\n"
+        "curl {params.url} -o {output}"
+
 
 #-------------
 # Process Data
 
+rule process_genbank:
+    input:
+        genbank_flatfile="data/external/refseq/rna.gbk.gz",
+        script="src/data/parse_genbank_flatfile.py",
+    output: "data/external/refseq/rna_annotation.tsv"
+    shell:
+        "{config[python]} {input.script} {input.genbank_flatfile} {output}"
+
+rule process_zwart2011_signature:
+    input:
+        xls="data/external/zwart2011/table_S2.xls",
+        refseq="data/external/refseq/rna_annotation.tsv",
+        ensembl="data/external/ensembl_annotation.tsv",
+        script="src/data/map_genes_zwart2011.py",
+    output: "data/external/zwart2011/er_responsive_genes.tsv",
+    shell:
+        "{config[python]} {input.script} {input.xls} {input.refseq} "
+        "{input.ensembl} {output}"
 
 rule tcga_factors_to_tsv:
     input:
