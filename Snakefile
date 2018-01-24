@@ -359,7 +359,7 @@ rule cross_validate_mri_from_factors:
     input:
         script="src/models/cv_mri_from_factors.py",
         sfa="models/sfa_tcga/sfa.nc",
-        mri="data/processed/mri-features.nc",
+        mri="data/processed/mri-features-all.nc",
     output:
         "models/mri_from_factors/performance.nc",
     shell:
@@ -369,7 +369,7 @@ rule cross_validate_mri_from_factors:
 rule cross_validate_factors_from_mri:
     input:
         script="src/models/cv_factors_from_mri.py",
-        mri="data/processed/mri-features.nc",
+        mri="data/processed/mri-features-all.nc",
         sfa="models/sfa_tcga/sfa.nc",
     output:
         "models/factors_from_mri/performance.nc",
@@ -576,7 +576,7 @@ report_deps = {
     "mri-remove-size": [
         "src/plot.py",
         "src/reports/setup-matplotlib.py",
-        "data/processed/mri-features.nc",
+        "data/processed/mri-features-all.nc",
     ],
     "cv-mri-from-factors": [
         "src/plot.py",
@@ -682,18 +682,49 @@ rule convert_notebook_to_html:
 # FIGURES                                                              #
 ########################################################################
 
-all_targets['figures'] = [
-    "figures/mri-cad-correlation.svg",
-]
+all_targets['figures'] = expand(
+    "figures/{fig}.{ext}",
+    fig=[
+        "mri-cad-correlation",
+        "fa-variance-explained",
+        "cad-factors-heatmap",
+    ],
+    ext=['svg', 'pdf', 'png'],
+)
 
+rule svg_to_pdf:
+    input: "figures/{fn}.svg"
+    output: "figures/{fn}.pdf"
+    shell: "inkscape --export-pdf {output} {input}"
+
+rule svg_to_png:
+    input: "figures/{fn}.svg"
+    output: "figures/{fn}.png"
+    shell: "inkscape --export-png {output} -d 300 {input}"
 
 rule figure_mri_cad_correlation:
     input:
         script="src/visualization/figure-mri-cad-correlation.py",
-        cad_features="data/processed/mri-features.nc",
+        cad_features="data/processed/mri-features-all.nc",
     output: "figures/mri-cad-correlation.svg"
     shell:
         "{config[python]} {input.script} {input.cad_features} {output}"
+
+rule figure_fa_variance_explained:
+    input:
+        script="src/visualization/figure-fa-variance-explained.py",
+        cad_features="data/processed/mri-features-all.nc",
+    output: "figures/fa-variance-explained.svg"
+    shell:
+        "{config[python]} {input.script} {input.cad_features} {output}"
+
+rule figure_cad_factors_heatmap:
+    input:
+        script="src/visualization/figure-cad-factors-heatmap.py",
+        cad_factors="data/processed/mri-features-all-fa.nc",
+    output: "figures/cad-factors-heatmap.svg"
+    shell:
+        "{config[python]} {input.script} {input.cad_factors} {output}"
 
 
 ########################################################################
