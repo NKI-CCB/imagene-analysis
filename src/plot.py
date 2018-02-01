@@ -298,7 +298,7 @@ def boxplot(x, y, *, ax, xlabel=None, ylabel=None, title=None):
             x = np.asarray(x)
     else:
         # Only vector-vector is implemented for now.
-        return NotImplemented()
+        raise NotImplementedError()
     if hasattr(y, 'shape') and len(y.shape) == 1:
         # y is a vector
         if isinstance(y, xr.DataArray):
@@ -309,7 +309,7 @@ def boxplot(x, y, *, ax, xlabel=None, ylabel=None, title=None):
             y = np.asarray(y)
     else:
         # Only vector-vector is implemented for now.
-        return NotImplemented()
+        raise NotImplementedError()
 
     x_split = dict()
     for cat in set(x):
