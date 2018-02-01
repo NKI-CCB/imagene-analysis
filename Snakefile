@@ -726,6 +726,18 @@ rule figure_cad_factors_heatmap:
     shell:
         "{config[python]} {input.script} {input.cad_factors} {output}"
 
+rule figure_tumor_size_subtype:
+    input:
+        script="src/visualization/figure-tumor-size-subtype.py",
+        cad_factors="data/processed/mri-features-all-fa.nc",
+        clinical_annotation="data/processed/clinical.nc",
+    output: "figures/tumor-size-boxplot.svg"
+    params:
+        size_factor=1,
+    shell:
+        "{config[python]} {input.script} {input.cad_factors} "
+        "{params.size_factor} {input.clinical_annotation} {output}"
+
 
 ########################################################################
 # INTERACTIVE                                                          #
