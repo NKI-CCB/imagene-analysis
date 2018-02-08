@@ -1,17 +1,12 @@
 import click
-import matplotlib
-import xarray as xr
 
+from lib import click_utils
 import plot
 
 
-click_in_path = click.Path(exists=True, dir_okay=False, resolve_path=True)
-click_out_path = click.Path(exists=False, dir_okay=False, resolve_path=True)
-
-
 @click.command()
-@click.argument('gsea_results', type=click_in_path)
-@click.argument('out', type=click_out_path)
+@click.argument('gsea_results', type=click_utils.in_path)
+@click.argument('out', type=click_utils.out_path)
 def plot_gsea_heatmap(cad_factors, out):
 
     with plot.subplots(figsize=(3.5, 3.5)) as (fig, ax):

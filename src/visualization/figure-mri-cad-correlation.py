@@ -2,18 +2,15 @@ import click
 import numpy as np
 import xarray as xr
 
+from lib import click_utils
 import plot
-
 from visualization.labels import feature_order, feature_display_names
 from visualization.style import set_style
 
-click_in_path = click.Path(exists=True, dir_okay=False, resolve_path=True)
-click_out_path = click.Path(exists=False, dir_okay=False, resolve_path=True)
-
 
 @click.command()
-@click.argument('mri_features', type=click_in_path)
-@click.argument('out', type=click_out_path)
+@click.argument('mri_features', type=click_utils.in_path)
+@click.argument('out', type=click_utils.out_path)
 def plot_mri_cad_factor_correlation(mri_features, out):
     mri_ds = xr.open_dataset(mri_features)
     del mri_ds['Comment']

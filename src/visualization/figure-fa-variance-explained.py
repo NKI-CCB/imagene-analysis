@@ -3,19 +3,15 @@ import numpy as np
 import sklearn
 import xarray as xr
 
-import plot
-
 from features.fa_mri_features import read_mri, adjust_scale
+from lib import click_utils
+import plot
 from visualization.style import set_style
 
 
-click_in_path = click.Path(exists=True, dir_okay=False, resolve_path=True)
-click_out_path = click.Path(exists=False, dir_okay=False, resolve_path=True)
-
-
 @click.command()
-@click.argument('mri_features', type=click_in_path)
-@click.argument('out', type=click_out_path)
+@click.argument('mri_features', type=click_utils.in_path)
+@click.argument('out', type=click_utils.out_path)
 def plot_fa_variance_explained(mri_features, out):
     mri_data_set = xr.open_dataset(mri_features).load()
     mri = read_mri(mri_data_set)
