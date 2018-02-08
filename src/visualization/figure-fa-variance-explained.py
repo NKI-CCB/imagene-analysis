@@ -1,5 +1,4 @@
 import click
-import matplotlib
 import numpy as np
 import sklearn
 import xarray as xr
@@ -7,6 +6,7 @@ import xarray as xr
 import plot
 
 from features.fa_mri_features import read_mri, adjust_scale
+from visualization.style import set_style
 
 
 click_in_path = click.Path(exists=True, dir_okay=False, resolve_path=True)
@@ -66,13 +66,6 @@ def plot_fa_variance_explained(mri_features, out):
 
 
 if __name__ == '__main__':
-    matplotlib.rcParams['font.family'] = 'sans-serif'
-    matplotlib.rcParams['font.sans-serif'] = ['Arial']
-    matplotlib.rcParams['font.weight'] = 'normal'
-    matplotlib.rcParams['figure.dpi'] = 300
-    matplotlib.rcParams['figure.facecolor'] = 'none'
-    matplotlib.rcParams['axes.labelsize'] = 11
-    matplotlib.rcParams['xtick.labelsize'] = 9
-    matplotlib.rcParams['ytick.labelsize'] = 9
+    set_style()
 
     plot_fa_variance_explained()
