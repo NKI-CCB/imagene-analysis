@@ -94,7 +94,8 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
             row_dendrogram=False, row_dist_metric='euclidean',
             row_cluster_method='average', col_dendrogram=False,
             col_dist_metric='euclidean', col_cluster_method='average',
-            ax, cmap=None, symmetric=False, cbar=True):
+            ax, cmap=None, norm=None, symmetric=False, cbar=True,
+            method='imshow'):
     if row_dendrogram or col_dendrogram:
         import scipy.cluster.hierarchy as scipy_ch
         import scipy.spatial.distance as scipy_sd
@@ -156,21 +157,32 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         if cmap is None:
             cmap = 'coolwarm'
 
-    c = ax.imshow(Zo, cmap=cmap, origin=origin, interpolation='none',
-                  aspect=aspect, vmin=zlim[0], vmax=zlim[1])
+    if method == 'imshow':
+        c = ax.imshow(Zo, cmap=cmap, origin=origin, interpolation='none',
+                      aspect=aspect, vmin=zlim[0], vmax=zlim[1], norm=norm)
+        xtick_adjust = 0.0
+        ytick_adjust = 0.0
+    elif method == 'pcolormesh':
+        c = ax.pcolormesh(Zo, cmap=cmap, vmin=zlim[0], vmax=zlim[1], norm=norm,
+                          edgecolors='face', lw=0)
+        xtick_adjust = 0.5
+        ytick_adjust = 0.5
+    else:
+        raise Exception("")
+
     if cbar:
         cbar = ax.figure.colorbar(c)
 
     xticklabels, set_xticklabels = _infer_set_ticklabels(xticklabels)
     if set_xticklabels:
-        ax.set_xticks(range(len(xticklabels)))
+        ax.set_xticks([x+xtick_adjust for x in range(len(xticklabels))])
         if col_order is not None:
             ax.set_xticklabels([xticklabels[o] for o in col_order])
         else:
             ax.set_xticklabels(xticklabels)
     yticklabels, set_yticklabels = _infer_set_ticklabels(yticklabels)
     if set_yticklabels:
-        ax.set_yticks(range(len(yticklabels)))
+        ax.set_yticks([y + ytick_adjust for y in range(len(yticklabels))])
         if row_order is not None:
             ax.set_yticklabels([yticklabels[o] for o in row_order])
         else:
