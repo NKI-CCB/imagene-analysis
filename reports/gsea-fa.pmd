@@ -92,8 +92,12 @@ plot_ds(df_cgp, fdr=0.25, le_prop=0.0, abs=False)
 plot_ds(df_cgp, fdr=0.05, le_prop=0.85, abs=False)
 ```
 
-```{python cgp-table}
+```{python cgp-table-a}
 table_ds(df_cgp, fdr=0.25)
+```
+
+```{python cgp-table-b}
+table_ds(df_cgp, fdr=0.25, le_prop=0.6, nes=2.0)
 ```
 
 Pathways (c2.cp) from MSigDB.
@@ -106,8 +110,12 @@ plot_ds(df_cp, fdr=0.25, le_prop=0.0)
 plot_ds(df_cp, fdr=0.05, le_prop=0.8)
 ```
 
-```{python cp-table}
+```{python cp-table-a}
 table_ds(df_cp, fdr=0.25)
+```
+
+```{python cp-table-b}
+table_ds(df_cp, fdr=0.25, le_prop=0.6, nes=2.0)
 ```
 
 ### Differential Expression ###
