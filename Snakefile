@@ -507,11 +507,14 @@ rule analyse_gene_sets:
 rule gene_set_analysis_to_netcdf:
     input:
         script="src/analysis/gsea-rds-to-nc.R",
-        rds="analyses/gsea{a}/{name}.Rds",
+        rds="analyses/gsea{a}/{variables}_{gene_set_collection}_{abs}.Rds",
     output:
-        "analyses/gsea{a,.*}/{name}.nc",
+        "analyses/gsea{a,.*}/"
+        "{variables}_{gene_set_collection,[^_/]+}_{abs,[TF]}.nc",
     shell:
-        "{config[r]} {input.script} {input.rds} {output}"
+        "{config[r]} {input.script}  {input.rds} {output} "
+        "--gene-set-collection={wildcards.gene_set_collection} "
+        "--abs={wildcards.abs}"
 
 rule gene_set_analysis_to_xlsx:
     input:
