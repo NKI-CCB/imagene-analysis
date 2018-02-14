@@ -691,7 +691,8 @@ all_targets['figures'] = expand(
         "mri-cad-correlation",
         "fa-variance-explained",
         "cad-factors-heatmap",
-        "gsea-heatmap_all-fa_c2.cgp_F",
+        "gsea-heatmap_all-fa_c2.cgp_F_1",
+        "gsea-heatmap_all-fa_c2.cp_T_2",
     ],
     ext=['svg', 'pdf', 'png'],
 )
@@ -746,11 +747,12 @@ rule figure_gsea_heatmap_fa:
     input:
         script="src/visualization/figure-gsea-heatmap.py",
         gsea="analyses/gsea/mri-features-{subset}-fa_{gene_set}_{abs}.nc",
-        sel_genesets="src/visualization/sel-gs_{subset}_{gene_set}_{abs}.tsv"
-    output: "figures/gsea-heatmap_{subset}-fa_{gene_set}_{abs}.svg"
+        sel_genesets="src/visualization/"
+            "sel-gs_{subset}_{gene_set}_{abs}_{factor}.tsv"
+    output: "figures/gsea-heatmap_{subset}-fa_{gene_set}_{abs}_{factor}.svg"
     shell:
         "{config[python]} {input.script} {input.gsea} {input.sel_genesets} "
-        "{output}"
+        "{wildcards.factor} {output}"
 
 
 

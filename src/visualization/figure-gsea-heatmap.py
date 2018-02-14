@@ -70,7 +70,7 @@ class SFDRNormalize(matplotlib.colors.Normalize):
 #####
 
 
-def plot_gsea_heatmap(gsea, genesets_annot, fig):
+def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig):
     genesets = genesets_annot['gene_set'].values
     assert all(np.isin(genesets, gsea['gene_set']))
     wf_prop = 0.3
@@ -120,24 +120,28 @@ def plot_gsea_heatmap(gsea, genesets_annot, fig):
     # Top waterfall plots
     ax_nes = fig.add_axes([(0/3)+wf_hmargin, 1-wf_prop+wf_vmargin,
                            (1/3)-wf_hmargin, wf_prop-wf_vmargin])
-    wf_plot(gsea['nes'][0, :], genesets, ax_nes, 'NES')
+    wf_plot(gsea['nes'][factor_idx, :], genesets, ax_nes, 'NES')
 
     ax_mesa = fig.add_axes([(1/3)+wf_hmargin, 1-wf_prop+wf_vmargin,
                            (1/3)-wf_hmargin, wf_prop-wf_vmargin])
-    mesa_mid = int(gsea['max_es_at'].max() / 2)
-    wf_plot(gsea['max_es_at'][0, :], genesets, ax_mesa, 'Max. ES at',
+    if gsea.attrs['absolute']:
+        mesa_mid = 1
+    else:
+        mesa_mid = int(gsea['max_es_at'].max() / 2)
+    wf_plot(gsea['max_es_at'][factor_idx, :], genesets, ax_mesa, 'Max. ES at',
             xbaseline=mesa_mid, reverse=True)
-    ax_mesa.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+    ax_mesa.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
 
     ax_le = fig.add_axes([(2/3)+wf_hmargin, 1-wf_prop+wf_vmargin,
                           (1/3)-wf_hmargin, wf_prop-wf_vmargin])
-    wf_plot(gsea['le_prop'][0, :], genesets, ax_le, 'Leading Edge')
+    wf_plot(gsea['le_prop'][factor_idx, :], genesets, ax_le, 'Leading Edge')
 
     # Bottom table
     ga = genesets_annot.copy()
-    sy = zip(ga['source'].values, ga['source_year'].values)
-    ga['source'] = ('gene_set', [f"{s} ({y})" for s, y in sy])
-    del ga['source_year']
+    if 'source' in ga and 'source_year' in ga:
+        sy = zip(ga['source'].values, ga['source_year'].values)
+        ga['source'] = ('gene_set', [f"{s} ({y})" for s, y in sy])
+        del ga['source_year']
     gaa = ga.to_array()
     table = ax.table(
         cellText=gaa.values,
@@ -161,8 +165,9 @@ def plot_gsea_heatmap(gsea, genesets_annot, fig):
 @click.command()
 @click.argument('gsea_results', type=click_utils.in_path)
 @click.argument('sel_genesets', type=click_utils.in_path)
+@click.argument('factor', type=int)
 @click.argument('out', type=click_utils.out_path)
-def plot_gsea_heatmap_(gsea_results, sel_genesets, out):
+def plot_gsea_heatmap_(gsea_results, sel_genesets, factor, out):
     gsea = xr.open_dataset(gsea_results).load()
     gsea['gene_set'] = (xr.apply_ufunc(np.char.decode, gsea['gene_set'])
                         .astype('object'))
@@ -172,8 +177,9 @@ def plot_gsea_heatmap_(gsea_results, sel_genesets, out):
                                    comment='#').
                      set_index('gene_set').to_xarray())
 
+    factor_idx = factor - 1
     with plot.figure(figsize=(7.0, 3.5)) as fig:
-        plot_gsea_heatmap(gsea, geneset_annot, fig)
+        plot_gsea_heatmap(gsea, geneset_annot, factor_idx, fig)
         fig.savefig(out, format="svg")
 
 
