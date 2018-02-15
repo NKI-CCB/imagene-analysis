@@ -693,6 +693,7 @@ all_targets['figures'] = expand(
         "cad-factors-heatmap",
         "gsea-heatmap_all-fa_c2.cgp_F_1",
         "gsea-heatmap_all-fa_c2.cp_T_2",
+        "gsea-heatmap_er-fa_c2.cp_T_6",
     ],
     ext=['svg', 'pdf', 'png'],
 )

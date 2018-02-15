@@ -1,0 +1,3 @@
+source	pathway	gene_set
+KEGG	Proteasome	KEGG_PROTEASOME
+Biocarta	Proteasome	BIOCARTA_PROTEASOME_PATHWAY
