@@ -80,4 +80,5 @@ target/
 # exclude results from source control
 /models/
 /analyses/
-/figures/
+/figures/*
+!/figures/figure1.svg
