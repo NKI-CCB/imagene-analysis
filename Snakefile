@@ -696,7 +696,7 @@ all_targets['figures'] = expand(
         "gsea-heatmap_er-fa_c2.cp_T_6",
     ],
     ext=['svg', 'pdf', 'png'],
-)
+) + ['figures/figure1.pdf', 'figures/figure1.png']
 
 rule svg_to_pdf:
     input: "figures/{fn}.svg"
