@@ -39,5 +39,24 @@ feature_display_names = {
     'variance_vox_val': "Variance Pre-Contrast Voxel Value",
     'circularity': "Circularity",
     'irregularity': "Irregularity",
-    'PCE_top10percent': "PCE",
+    'PCE_top10percent': "CPE",
+}
+
+factor_display_names = {
+    'size': "Tumor Size",
+    'smoothness': "Smoothness",
+    'sharpness_var': "Sharpness (variation)",
+    'late_enhancement': "Late Enhancement",
+    'pre_contrast': "Pre-Contrast Voxel Value",
+    'CPE': "CPE",
+    'init_enhancement': "Initial Enhancement",
+    'circularity': "Circularity",
+    'sharpness_mean': "Sharpness (mean)",
+    'irregularity': "Irregularity",
+}
+
+clin_display_names = {
+    'grade': "Grade",
+    'ihc_subtype': "IHC Subtype",
+    'age_at_diagnosis': "Age",
 }

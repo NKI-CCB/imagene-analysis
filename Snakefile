@@ -333,7 +333,6 @@ rule factor_analysis_mri_features:
     shell:
         "{config[python]} {input.script} 10 {input.mri} {output}"
 
-
 ########################################################################
 # MODELS                                                               #
 ########################################################################
@@ -694,6 +693,14 @@ all_targets['figures'] = expand(
         "gsea-heatmap_all-fa_c2.cgp_F_1",
         "gsea-heatmap_all-fa_c2.cp_T_2",
         "gsea-heatmap_er-fa_c2.cp_T_6",
+        "clin-boxplot-ihc_subtype-size",
+        "clin-boxplot-ihc_subtype-irregularity",
+        "clin-boxplot-ihc_subtype-pre_contrast",
+        "clin-boxplot-grade-size",
+        "clin-boxplot-grade-irregularity",
+        "clin-boxplot-grade-pre_contrast",
+        "clin-boxplot-grade-smoothness",
+        "clin-boxplot-grade-CPE",
     ],
     ext=['svg', 'pdf', 'png'],
 ) + ['figures/figure1.pdf', 'figures/figure1.png']
@@ -732,17 +739,21 @@ rule figure_cad_factors_heatmap:
     shell:
         "{config[python]} {input.script} {input.cad_factors} {output}"
 
-rule figure_tumor_size_subtype:
+rule figure_clin_boxplot:
     input:
-        script="src/visualization/figure-tumor-size-subtype.py",
+        script="src/visualization/figure-mri-factor-clin-boxplot.py",
         cad_factors="data/processed/mri-features-all-fa.nc",
+        factor_annotation="config/factor_annot_all.yaml",
         clinical_annotation="data/processed/clinical.nc",
-    output: "figures/tumor-size-boxplot.svg"
-    params:
-        size_factor=1,
+    output:
+        "figures/clin-boxplot-{clin}-{factor}.svg",
+        "figures/clin-boxplot-{clin}-{factor}_stats.txt",
     shell:
-        "{config[python]} {input.script} {input.cad_factors} "
-        "{params.size_factor} {input.clinical_annotation} {output}"
+        "{config[python]} {input.script} "
+        "{input.cad_factors} {wildcards.factor} {input.factor_annotation} "
+        "{input.clinical_annotation} {wildcards.clin} "
+        "{output}"
+
 
 rule figure_gsea_heatmap_fa:
     input:
