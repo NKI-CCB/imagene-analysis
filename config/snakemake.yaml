@@ -5,7 +5,6 @@ pandoc: pandoc
 # The appropiate version PWeave and jupyter are normally installed into the
 # virtual environment.
 pweave: pweave
-pweave: pweave
 nbconvert: jupyter nbconvert
 
 # How to download the data.
