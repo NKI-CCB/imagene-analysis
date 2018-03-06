@@ -8,3 +8,6 @@ Chang	2004	human fibroblasts	"serum response,
 cell cycle related"	CHANG_CYCLING_GENES
 Zhou	2007	human fibroblasts	"ionizing radiation,
 cell cycle related"	ZHOU_CELL_CYCLE_GENES_IN_IR_RESPONSE_24HR
+Pujana	2007	breast tumors	"BRCA1, BRCA2,
+ATM and CHECK2
+network modelling"	PUJANA_XPRSS_INT_NETWORK

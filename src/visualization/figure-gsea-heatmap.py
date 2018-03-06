@@ -190,7 +190,7 @@ def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig):
         if col % 2 == 1:
             cell.set_facecolor('#eeeeee')
         if col == 3:
-            cell.set_height(2*cell.get_height())
+            cell.set_height(3*cell.get_height())
         if col == 0 and row >= 0:
             cell.set_text_props(**gs_label_props)
         if row == -1:
