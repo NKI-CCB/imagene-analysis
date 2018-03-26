@@ -713,7 +713,7 @@ rule svg_to_pdf:
 rule svg_to_png:
     input: "figures/{fn}.svg"
     output: "figures/{fn}.png"
-    shell: "inkscape --export-png {output} -d 300 {input}"
+    shell: "inkscape --export-png {output} -D -d 300 {input}"
 
 rule figure_mri_cad_correlation:
     input:
