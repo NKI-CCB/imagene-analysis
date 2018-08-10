@@ -338,7 +338,7 @@ rule factor_analysis_mri_features:
 ########################################################################
 
 all_targets['models'] = [
-    "models/sfa_tcga/sfa.nc",
+#    "models/sfa_tcga/sfa.nc",
 ]
 
 
