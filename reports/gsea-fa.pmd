@@ -29,17 +29,21 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 ```
 
 ```{python load-gsea}
-df_h = load_gsea_ds("../analyses/gsea/mri-features-all-fa_h.all_T.nc")
+df_h = load_gsea_ds("analyses/gsea/mri-features-all-fa_h.all_T.nc")
 df_h['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_h['mri_feature'].values])
 df_h['gene_set'] = ('gene_set',
     [gs[9:] for gs in df_h['gene_set'].values])
-df_cgp = load_gsea_ds("../analyses/gsea/mri-features-all-fa_c2.cgp_F.nc")
+df_cgp = load_gsea_ds("analyses/gsea/mri-features-all-fa_c2.cgp_F.nc")
 df_cgp['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_cgp['mri_feature'].values])
-df_cp = load_gsea_ds("../analyses/gsea/mri-features-all-fa_c2.cp_T.nc")
+df_cp = load_gsea_ds("analyses/gsea/mri-features-all-fa_c2.cp_T.nc")
 df_cp['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_cp['mri_feature'].values])
+```
+
+```{python load-differential-expression}
+de = xr.open_dataset("analyses/de/mri-features-all-fa.nc")
 ```
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that
@@ -60,7 +64,7 @@ And a function to show significant pathway enrichments in a table.
 ### Factor Analysis ###
 
 ```{python loadings-heatmap}
-fa_dataset = xr.open_dataset("../data/processed/mri-features-all-fa.nc").load()
+fa_dataset = xr.open_dataset("data/processed/mri-features-all-fa.nc").load()
 plot.heatmap(fa_dataset['loadings'].T)
 fa_dataset.close()
 ```
@@ -88,8 +92,12 @@ plot_ds(df_cgp, fdr=0.25, le_prop=0.0, abs=False)
 plot_ds(df_cgp, fdr=0.05, le_prop=0.85, abs=False)
 ```
 
-```{python cgp-table}
+```{python cgp-table-a}
 table_ds(df_cgp, fdr=0.25)
+```
+
+```{python cgp-table-b}
+table_ds(df_cgp, fdr=0.25, le_prop=0.6, nes=2.0)
 ```
 
 Pathways (c2.cp) from MSigDB.
@@ -102,6 +110,28 @@ plot_ds(df_cp, fdr=0.25, le_prop=0.0)
 plot_ds(df_cp, fdr=0.05, le_prop=0.8)
 ```
 
-```{python cp-table}
+```{python cp-table-a}
 table_ds(df_cp, fdr=0.25)
+```
+
+```{python cp-table-b}
+table_ds(df_cp, fdr=0.25, le_prop=0.6, nes=2.0)
+```
+
+### Differential Expression ###
+
+```{python de}
+for mri_idx in range(de.dims['mri_feature']):
+    mri_f = de['mri_feature'][mri_idx].values.item().decode()
+    gene_rank = de['t'][mri_idx, :].argsort()
+    sel_genes = list(gene_rank[0:250]) + list(gene_rank[-250:])
+
+    df = pd.DataFrame({
+        "coefficient": de['coefficient'][mri_idx, sel_genes].to_pandas(),
+        "t": de['t'][mri_idx, sel_genes].to_pandas(),
+        "gene symbol": de['hgnc_symbol'][sel_genes],
+    })
+    df.name = mri_f
+    display(Markdown(f"*{mri_f}*"))
+    display_table(df)
 ```

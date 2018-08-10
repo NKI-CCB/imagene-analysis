@@ -8,7 +8,7 @@ date: 2017-06-06
 
 Load libraries.
 
-```{python import_libs}
+```python import_libs
 from IPython.display import display, Markdown
 import numpy as np
 import pandas as pd
@@ -20,24 +20,29 @@ import plot
 
 Setup style of plots.
 
-```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
+```python setup-matplotlib, source="src/reports/setup-matplotlib.py"
 ```
 
 Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 
-```{python load-gsea-fun, source="src/reports/load-gsea-fun.py"}
+```python load-gsea-fun, source="src/reports/load-gsea-fun.py"
 ```
 
-```{python load-gsea}
-df_h = load_gsea_ds("../analyses/gsea/mri-features-er-fa_h.all_T.nc")
+```python load-gsea
+df_h = load_gsea_ds("analyses/gsea/mri-features-er-fa_h.all_T.nc")
 df_h['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_h['mri_feature'].values])
-df_cgp = load_gsea_ds("../analyses/gsea/mri-features-er-fa_c2.cgp_F.nc")
+df_cgp = load_gsea_ds("analyses/gsea/mri-features-er-fa_c2.cgp_F.nc")
 df_cgp['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_cgp['mri_feature'].values])
-df_cp = load_gsea_ds("../analyses/gsea/mri-features-er-fa_c2.cp_T.nc")
+df_cp = load_gsea_ds("analyses/gsea/mri-features-er-fa_c2.cp_T.nc")
 df_cp['mri_feature'] = ('mri_feature',
     ["F{}".format(i) for i in df_cp['mri_feature'].values])
+```
+
+And differential expression
+```python load-de
+de = xr.open_dataset("analyses/de/mri-features-er-fa.nc")
 ```
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that
@@ -49,7 +54,7 @@ are significant.
 A utility function to display tables with [DataTables](https://datatables.net).
 And a function to show significant pathway enrichments in a table.
 
-```{python es-table-fun, source="src/reports/es-table-fun.py"}
+```python es-table-fun, source="src/reports/es-table-fun.py"
 ```
 
 
@@ -57,8 +62,8 @@ And a function to show significant pathway enrichments in a table.
 
 ### Factor Analysis ###
 
-```{python loadings-heatmap}
-fa_dataset = xr.open_dataset("../data/processed/mri-features-er-fa.nc").load()
+```python loadings-heatmap
+fa_dataset = xr.open_dataset("data/processed/mri-features-er-fa.nc").load()
 plot.heatmap(fa_dataset['loadings'].T)
 fa_dataset.close()
 ```
@@ -67,38 +72,56 @@ fa_dataset.close()
 
 Hallmarks from MSigDB.
 
-```{python hallmarks-es-plot}
+```python hallmarks-es-plot
 plot_ds(df_h, fdr=0.25)
 ```
 
-```{python hallmarks-table}
+```python hallmarks-table
 table_ds(df_h, fdr=0.25)
 ```
 
 Gene signatures (c2.cgp) from MSigDB.
 
-```{python cgp-es-plot-a}
+```python cgp-es-plot-a
 plot_ds(df_cgp, fdr=0.25, le_prop=0.0, abs=False)
 ```
 
-```{python cgp-es-plot-b}
+```python cgp-es-plot-b
 plot_ds(df_cgp, fdr=0.05, le_prop=0.8, abs=False)
 ```
 
-```{python cgp-table}
+```python cgp-table
 table_ds(df_cgp, fdr=0.25)
 ```
 
 Pathways (c2.cp) from MSigDB.
 
-```{python cp-es-plot-a}
+```python cp-es-plot-a
 plot_ds(df_cp, fdr=0.25, le_prop=0.0)
 ```
 
-```{python cp-es-plot-b}
+```python cp-es-plot-b
 plot_ds(df_cp, fdr=0.25, le_prop=0.7)
 ```
 
-```{python cp-table}
+```python cp-table
 table_ds(df_cp, fdr=0.25)
+```
+
+### Differential Expression ###
+
+```python de
+for mri_idx in range(de.dims['mri_feature']):
+    mri_f = de['mri_feature'][mri_idx].values.item().decode()
+    gene_rank = de['t'][mri_idx, :].argsort()
+    sel_genes = list(gene_rank[0:250]) + list(gene_rank[-250:])
+
+    df = pd.DataFrame({
+        "coefficient": de['coefficient'][mri_idx, sel_genes].to_pandas(),
+        "t": de['t'][mri_idx, sel_genes].to_pandas(),
+        "gene symbol": de['hgnc_symbol'][sel_genes],
+    })
+    df.name = mri_f
+    display(Markdown(f"*{mri_f}*"))
+    display_table(df)
 ```

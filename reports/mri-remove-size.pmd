@@ -8,7 +8,7 @@ date: 2017-07-03
 
 Load libraries.
 
-```{python import_libs}
+```python import_libs
 from math import sqrt, ceil
 
 import factor_rotation
@@ -23,13 +23,13 @@ import plot
 
 Setup style of plots.
 
-```{python setup-matplotlib, source="src/reports/setup-matplotlib.py"}
+```python setup-matplotlib, source="src/reports/setup-matplotlib.py"
 ```
 
 Load MRI CAD features.
 
-```{python load-mri}
-mri_ds = xr.open_dataset('../data/processed/mri-features.nc')
+```python load-mri
+mri_ds = xr.open_dataset('data/processed/mri-features.nc')
 del mri_ds['Comment']
 del mri_ds['MultiFocal']
 mri = mri_ds.to_array('cad_feature', 'mri_cad_features')
@@ -43,12 +43,12 @@ print(mri)
 
 ### PCA ###
 
-```{python fit-pca}
+```python fit-pca
 pca = sklearn.decomposition.PCA()
 pca.fit((mri / mri.std('case')).values)
 ```
 
-```{python pca-ev}
+```python pca-ev
 total_var = np.sum(pca.explained_variance_)
 with plot.subplots(3, 1, sharex=True) as (fig, axs):
     axs[0].plot(
@@ -71,7 +71,7 @@ with plot.subplots(3, 1, sharex=True) as (fig, axs):
 n_components = 11
 ```
 
-```{python heatmap-pca}
+```python heatmap-pca
 plot.heatmap(
     pca.components_[:n_components, :].T,
     xticklabels=[str(i+1) for i in range(n_components)],
@@ -79,7 +79,7 @@ plot.heatmap(
 )
 ```
 
-```{python plot-pca-a}
+```python plot-pca-a
 with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
@@ -93,7 +93,7 @@ with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
 
 ### Normal QQ-plots of MRI CAD features ###
 
-```{python qqplot-mri-features, evaluate=True}
+```python qqplot-mri-features, evaluate=True
 nf = len(mri['cad_feature'])
 nc = len(mri['case'])
 n_row = ceil(nf / 3)
@@ -117,7 +117,7 @@ with plot.subplots(n_row, n_col, figsize=fs) as (fig, axs):
 
 ## Adjusted Scale ##
 
-```{python adjust-mri-features}
+```python adjust-mri-features
 mri_adj = xr.DataArray(np.full(mri.shape, np.nan), mri.coords, mri.dims)
 for feature in mri['cad_feature'].values:
     if feature[0:3] == 'vol':
@@ -131,7 +131,7 @@ mri_adj
 
 ### Normal QQ-plots of MRI CAD features ###
 
-```{python qqplot-mri-features-adj, evaluate=True}
+```python qqplot-mri-features-adj, evaluate=True
 nf = len(mri_adj['cad_feature'])
 nc = len(mri_adj['case'])
 n_row = ceil(nf / 3)
@@ -155,12 +155,12 @@ with plot.subplots(n_row, n_col, figsize=fs) as (fig, axs):
 
 ### PCA ###
 
-```{python fit-pca-adj}
+```python fit-pca-adj
 pca_adj = sklearn.decomposition.PCA()
 pca_adj.fit((mri_adj / mri_adj.std('case')).values)
 ```
 
-```{python pca-adj-ev}
+```python pca-adj-ev
 total_var = np.sum(pca.explained_variance_)
 with plot.subplots(3, 1, sharex=True) as (fig, axs):
     axs[0].plot(
@@ -185,7 +185,7 @@ n_components = 10
 ```
 
 
-```{python heatmap-pca-adj}
+```python heatmap-pca-adj
 plot.heatmap(
     pca_adj.components_[:n_components, :].T,
     xticklabels=[str(i+1) for i in range(n_components)],
@@ -193,7 +193,7 @@ plot.heatmap(
 )
 ```
 
-```{python plot-pca-adj-a}
+```python plot-pca-adj-a
 with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
@@ -209,32 +209,33 @@ with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
 
 ### Varimax ###
 
-```{python fit-pca-adj-varimax}
-coeff_varimax, _ = factor_rotation.rotate_factors(
+```python fit-pca-adj-varimax
+coeff = dict()
+coeff['varimax'], _ = factor_rotation.rotate_factors(
     pca_adj.components_[:n_components, :].T,
     'varimax',
 )
-coeff_varimax = coeff_varimax.T
+coeff['varimax'] = coeff['varimax'].T
 ```
 
-```{python heatmap-pca-adj-varimax}
+```python heatmap-pca-adj-varimax
 plot.heatmap(
-    coeff_varimax.T,
-    xticklabels=[str(i+1) for i in range(coeff_varimax.shape[0])],
+    coeff['varimax'].T,
+    xticklabels=[str(i+1) for i in range(coeff['varimax'].shape[0])],
     yticklabels=mri_adj.cad_feature.values,
 )
 ```
 
-```{python plot-pca-adj-varimax}
+```python plot-pca-adj-varimax
 with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
-    for i in range(coeff_varimax.shape[1]):
-        ax.arrow(0, 0, coeff_varimax[0, i], coeff_varimax[1, i])
-        alength = sqrt(coeff_varimax[0, i]**2 +
-                       coeff_varimax[1, i]**2)
+    for i in range(coeff['varimax'].shape[1]):
+        ax.arrow(0, 0, coeff['varimax'][0, i], coeff['varimax'][1, i])
+        alength = sqrt(coeff['varimax'][0, i]**2 +
+                       coeff['varimax'][1, i]**2)
         if alength > 0.25:
-            ax.text(coeff_varimax[0, i], coeff_varimax[1, i],
+            ax.text(coeff['varimax'][0, i], coeff['varimax'][1, i],
                     mri_adj['cad_feature'].values[i])
 ```
 
@@ -242,32 +243,32 @@ with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
 ### Quartimin ###
 
 
-```{python fit-pca-adj-quartimin}
-coeff_quartimin, _ = factor_rotation.rotate_factors(
+```python fit-pca-adj-quartimin
+coeff['quartimin'], _ = factor_rotation.rotate_factors(
     pca_adj.components_[:n_components, :].T,
     'quartimin',
 )
-coeff_quartimin = coeff_quartimin.T
+coeff['quartimin'] = coeff['quartimin'].T
 ```
 
-```{python heatmap-pca-adj-quartimin}
+```python heatmap-pca-adj-quartimin
 plot.heatmap(
-    coeff_quartimin.T,
-    xticklabels=[str(i+1) for i in range(coeff_quartimin.shape[0])],
+    coeff['quartimin'].T,
+    xticklabels=[str(i+1) for i in range(coeff['quartimin'].shape[0])],
     yticklabels=mri_adj.cad_feature.values,
 )
 ```
 
-```{python plot-pca-adj-quartimin}
+```python plot-pca-adj-quartimin
 with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
-    for i in range(coeff_quartimin.shape[1]):
-        ax.arrow(0, 0, coeff_quartimin[0, i], coeff_quartimin[1, i])
-        alength = sqrt(coeff_quartimin[0, i]**2 +
-                       coeff_quartimin[1, i]**2)
+    for i in range(coeff['quartimin'].shape[1]):
+        ax.arrow(0, 0, coeff['quartimin'][0, i], coeff['quartimin'][1, i])
+        alength = sqrt(coeff['quartimin'][0, i]**2 +
+                       coeff['quartimin'][1, i]**2)
         if alength > 0.25:
-            ax.text(coeff_quartimin[0, i], coeff_quartimin[1, i],
+            ax.text(coeff['quartimin'][0, i], coeff['quartimin'][1, i],
                     mri_adj['cad_feature'].values[i])
 ```
 
@@ -275,32 +276,32 @@ with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
 ### Quartimax ###
 
 
-```{python fit-pca-adj-quartimax}
-coeff_quartimax, _ = factor_rotation.rotate_factors(
+```python fit-pca-adj-quartimax
+coeff['quartimax'], _ = factor_rotation.rotate_factors(
     pca_adj.components_[:n_components, :].T,
     'quartimax',
 )
-coeff_quartimax = coeff_quartimax.T
+coeff['quartimax'] = coeff['quartimax'].T
 ```
 
-```{python heatmap-pca-adj-quartimax}
+```python heatmap-pca-adj-quartimax
 plot.heatmap(
-    coeff_quartimax.T,
-    xticklabels=[str(i+1) for i in range(coeff_quartimax.shape[0])],
+    coeff['quartimax'].T,
+    xticklabels=[str(i+1) for i in range(coeff['quartimax'].shape[0])],
     yticklabels=mri_adj.cad_feature.values,
 )
 ```
 
-```{python plot-pca-adj-quartimax}
+```python plot-pca-adj-quartimax
 with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
-    for i in range(coeff_quartimax.shape[1]):
-        ax.arrow(0, 0, coeff_quartimax[0, i], coeff_quartimax[1, i])
-        alength = sqrt(coeff_quartimax[0, i]**2 +
-                       coeff_quartimax[1, i]**2)
+    for i in range(coeff['quartimax'].shape[1]):
+        ax.arrow(0, 0, coeff['quartimax'][0, i], coeff['quartimax'][1, i])
+        alength = sqrt(coeff['quartimax'][0, i]**2 +
+                       coeff['quartimax'][1, i]**2)
         if alength > 0.25:
-            ax.text(coeff_quartimax[0, i], coeff_quartimax[1, i],
+            ax.text(coeff['quartimax'][0, i], coeff['quartimax'][1, i],
                     mri_adj['cad_feature'].values[i])
 ```
 
@@ -308,31 +309,36 @@ with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
 ### Equamax ###
 
 
-```{python fit-pca-adj-equamax}
-coeff_equamax, _ = factor_rotation.rotate_factors(
+```python fit-pca-adj-equamax
+coeff['equamax'], _ = factor_rotation.rotate_factors(
     pca_adj.components_[:n_components, :].T,
     'equamax',
 )
-coeff_equamax = coeff_equamax.T
+coeff['equamax'] = coeff['equamax'].T
 ```
 
-```{python heatmap-pca-adj-equamax}
+```python heatmap-pca-adj-equamax
 plot.heatmap(
-    coeff_equamax.T,
-    xticklabels=[str(i+1) for i in range(coeff_equamax.shape[0])],
+    coeff['equamax'].T,
+    xticklabels=[str(i+1) for i in range(coeff['equamax'].shape[0])],
     yticklabels=mri_adj.cad_feature.values,
 )
 ```
 
-```{python plot-pca-adj-equamax}
+```python plot-pca-adj-equamax
 with plot.subplots(1, 1, figsize=(7, 7)) as (fig, ax):
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
-    for i in range(coeff_equamax.shape[1]):
-        ax.arrow(0, 0, coeff_equamax[0, i], coeff_equamax[1, i])
-        alength = sqrt(coeff_equamax[0, i]**2 +
-                       coeff_equamax[1, i]**2)
+    for i in range(coeff['equamax'].shape[1]):
+        ax.arrow(0, 0, coeff['equamax'][0, i], coeff['equamax'][1, i])
+        alength = sqrt(coeff['equamax'][0, i]**2 +
+                       coeff['equamax'][1, i]**2)
         if alength > 0.25:
-            ax.text(coeff_equamax[0, i], coeff_equamax[1, i],
+            ax.text(coeff['equamax'][0, i], coeff['equamax'][1, i],
                     mri_adj['cad_feature'].values[i])
+```
+
+```python coeff-correlation
+for method in coeff:
+    print(np.corrcoef(coeff['varimax'].flat, coeff[method].flat))
 ```

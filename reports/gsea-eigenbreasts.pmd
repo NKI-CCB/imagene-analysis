@@ -1,7 +1,7 @@
 ---
-title: Gene Set Enrichment Analysis of CAD features (Volume regressed out)
+title: Gene Set Enrichment Analysis of Eigenbreasts
 author: Tycho Bismeijer
-date: 2017-06-06
+date: 2017-11-10
 ---
 
 ## Setup ## {.collapsed}
@@ -29,11 +29,16 @@ Load gene set enrichment analysis (GSEA) results on the MsigDB Hallmarks set.
 ```
 
 ```{python load-gsea}
-df_h = load_gsea_ds("analyses/gsea/mri-features-all-reg-volume_h.all_T.nc")
-df_cgp = load_gsea_ds("analyses/gsea/"
-    "mri-features-all-reg-volume_c2.cgp_F.nc")
-df_cp = load_gsea_ds("analyses/gsea/"
-    "mri-features-all-reg-volume_c2.cp_T.nc")
+feature_set = 'eigenbreasts_contra_ds8'
+df_h = load_gsea_ds(f"analyses/gsea/{feature_set}_h.all_T.nc")
+df_h['mri_feature'] = ('mri_feature',
+    ["PC{}".format(i) for i in df_h['mri_feature'].values])
+df_cgp = load_gsea_ds(f"analyses/gsea/{feature_set}_c2.cgp_F.nc")
+df_cgp['mri_feature'] = ('mri_feature',
+    ["PC{}".format(i) for i in df_cgp['mri_feature'].values])
+df_cp = load_gsea_ds(f"analyses/gsea/{feature_set}_c2.cp_T.nc")
+df_cp['mri_feature'] = ('mri_feature',
+    ["PC{}".format(i) for i in df_cp['mri_feature'].values])
 ```
 
 A function to plot a heatmap with normalized enrichment statistics (NES) that
@@ -51,6 +56,8 @@ And a function to show significant pathway enrichments in a table.
 
 ## Results ##
 
+### GSEA ###
+
 Hallmarks from MSigDB.
 
 ```{python hallmarks-es-plot}
@@ -67,10 +74,6 @@ Gene signatures (c2.cgp) from MSigDB.
 plot_ds(df_cgp, fdr=0.25, le_prop=0.0, abs=False)
 ```
 
-```{python cgp-es-plot-b}
-plot_ds(df_cgp, fdr=0.25, le_prop=0.8, abs=False)
-```
-
 ```{python cgp-table}
 table_ds(df_cgp, fdr=0.25)
 ```
@@ -78,7 +81,7 @@ table_ds(df_cgp, fdr=0.25)
 Pathways (c2.cp) from MSigDB.
 
 ```{python cp-es-plot}
-plot_ds(df_cp, fdr=0.25)
+plot_ds(df_cp, fdr=0.25, le_prop=0.0)
 ```
 
 ```{python cp-table}

@@ -30,6 +30,8 @@ rule all_data:
     input: lambda _: all_targets['data']
 rule all_reports:
     input: lambda _: all_targets['reports']
+rule all_figures:
+    input: lambda _: all_targets['figures']
 rule all_features:
     input: lambda _: all_targets['features']
 rule all_models:
@@ -48,6 +50,7 @@ rule all_notebooks:
 all_targets['data'] = [
     "data/processed/gene-expression.nc",
     "data/processed/mri-features-all.nc",
+    "data/processed/mri-features-er.nc",
     "data/processed/mri-eigenbreasts.nc",
     "data/processed/clinical.nc",
 ]
@@ -56,87 +59,70 @@ all_targets['data'] = [
 #------------------
 # Download Raw Data
 
-def download_beehub(file_location, out):
-    file_url = 'https://beehub.nl/' + file_location
-    out = Path(out).resolve()
+# Project data on remote share #
 
-    r = requests.get(file_url, stream=True,
-                            auth=(beehub_username, beehub_password))
-    r.raise_for_status()
+def download_scp(remotefile, dest):
+    root = config['download_root']
+    shell(f"""
+        scp {root}{remotefile} {dest}
+        touch {dest}
+    """)
 
-    r_length = r.headers.get('content-length')
-    if r_length is not None:
-        r_length = int(r_length)
-    chunk_size = 1024
-    with out.open('wb') as file:
-        with click.progressbar(r.iter_content(1024),
-                               length=int(r_length/chunk_size)) as bar:
-            for chunk in bar:
-                file.write(chunk)
-
+download_funcs = {'download_scp': download_scp}
+download = download_funcs[config['download_func']]
 
 rule download_gene_expression:
     output: "data/raw/gene-expression.nc"
+    params:
+        file="gene_expression/2017-02-01-gene-expression-imagene.nc",
     run:
-        download_beehub(
-            "home/tychobismeijer/Imagene/gene_expression/"
-            "2017-02-01-gene-expression-imagene.nc",
-            output[0]
-        )
+        download(params.file, output[0])
 
 rule download_sample_annotation:
     output: "data/raw/sample-tracking.tsv"
+    params:
+        file="gene_expression/2016-06-14-sample-tracking.tsv"
     run:
-        download_beehub(
-            "home/tychobismeijer/Imagene/"
-            "gene_expression/2016-06-14-sample-tracking.tsv",
-            output[0]
-        )
+        download(params.file, output[0])
 
 rule download_mri_features:
     output: "data/raw/mri-features.xlsx"
+    params:
+        file="mri/2016-03-31-Tumor_Parenchym_Features_"
+             "variablenamesupdated.xlsx",
     run:
-        download_beehub(
-            "home/tychobismeijer/Imagene/mri/"
-            "2016-03-31-Tumor_Parenchym_Features_variablenamesupdated.xlsx",
-            output[0]
-        )
+        download(params.file, output[0])
 
 rule download_eigenbreasts:
     output: "data/raw/eigenbreasts_{subset}.xlsx"
+    params:
+        file="mri/2017-08-09-eigenbreasts/eigenbreasts_Elastix_{subset}.xlsx"
     run:
-        download_beehub(
-            "home/tychobismeijer/Imagene/mri/2017-08-09-eigenbreasts/"
-            "eigenbreasts_Elastix_{subset}.xlsx".format(**wildcards),
-            output[0],
-        )
+        download(params.file, output[0])
 
 rule download_clinical_data:
     output: "data/raw/imagene_clinical.tsv"
+    params:
+        file="clinical/2016-01-19-imagene_clinical.tsv"
     run:
-        download_beehub(
-            "home/tychobismeijer/Imagene/clinical/"
-            "2016-01-19-imagene_clinical.tsv",
-            output[0]
-        )
+        download(params.file, output[0])
 
 rule download_sfa_tcga_breast:
     output: "data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5"
+    params:
+        file="external/tcga-breast-gexp+rppa+cn-sfa-solution.h5"
     run:
-        download_beehub(
-            "home/tychobismeijer/Imagene/external/"
-            "tcga-breast-gexp+rppa+cn-sfa-solution.h5",
-            output[0])
-
+        download(params.file, output[0])
 
 rule download_sfa_tcga_breast_conf:
     output: "data/external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml"
+    params:
+        file="external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml"
     run:
-        download_beehub(
-            "home/tychobismeijer/Imagene/external/"
-            "tcga-breast-gexp+rppa+cn-sfa-solution.yaml",
-            output[0])
+        download(params.file, output[0])
 
+
+# External resources #
 
 rule download_ensembl_annotation:
     input:
@@ -145,7 +131,6 @@ rule download_ensembl_annotation:
         "data/external/ensembl_annotation.tsv"
     shell:
         "{config[python]} {input.script} {output}"
-
 
 rule download_msigdb:
     output:
@@ -166,10 +151,47 @@ rule unzip_msigdb:
         "{wildcards.gene_set}.v5.2.{wildcards.gene_ids}.gmt > {output}\n"
         "touch {output}"
 
+rule download_zwart2011_er_signature:
+    output: "data/external/zwart2011/table_S2.xls"
+    params:
+        url="http://emboj.embopress.org/content/embojnl/30/23/4764/DC3/embed/"
+            "inline-supplementary-material-3.xls?download=true"
+
+    shell:
+        "mkdir -p data/external/zwart2011/\n"
+        "curl {params.url} -o {output}"
+
+rule download_refseq_annotation:
+    output: "data/external/refseq/rna.gbk.gz"
+    params:
+        url="ftp://ftp.ncbi.nlm.nih.gov/genomes/Homo_sapiens/"
+            "GRCh38.p10_interim_annotation/interim_GRCh38.p10_rna.gbk.gz",
+    shell:
+        "mkdir -p data/external/refseq/\n"
+        "curl {params.url} -o {output}"
+
 
 #-------------
 # Process Data
 
+rule process_genbank:
+    input:
+        genbank_flatfile="data/external/refseq/rna.gbk.gz",
+        script="src/data/parse_genbank_flatfile.py",
+    output: "data/external/refseq/rna_annotation.tsv"
+    shell:
+        "{config[python]} {input.script} {input.genbank_flatfile} {output}"
+
+rule process_zwart2011_signature:
+    input:
+        xls="data/external/zwart2011/table_S2.xls",
+        refseq="data/external/refseq/rna_annotation.tsv",
+        ensembl="data/external/ensembl_annotation.tsv",
+        script="src/data/map_genes_zwart2011.py",
+    output: "data/external/zwart2011/er_responsive_genes.tsv",
+    shell:
+        "{config[python]} {input.script} {input.xls} {input.refseq} "
+        "{input.ensembl} {output}"
 
 rule tcga_factors_to_tsv:
     input:
@@ -232,7 +254,7 @@ rule process_gene_expression:
         script="src/data/process_gene_expression.py",
         gexp="data/raw/gene-expression.nc",
         sample_tracking="data/raw/sample-tracking.tsv",
-        gene_annot="data/external/ensembl_annotation.tsv",
+        gene_annot="data/ensembl_annotation.tsv",
     output:
         "data/processed/gene-expression.nc"
     shell:
@@ -311,13 +333,12 @@ rule factor_analysis_mri_features:
     shell:
         "{config[python]} {input.script} 10 {input.mri} {output}"
 
-
 ########################################################################
 # MODELS                                                               #
 ########################################################################
 
 all_targets['models'] = [
-    "models/sfa/sfa.nc",
+#    "models/sfa_tcga/sfa.nc",
 ]
 
 
@@ -337,7 +358,7 @@ rule cross_validate_mri_from_factors:
     input:
         script="src/models/cv_mri_from_factors.py",
         sfa="models/sfa_tcga/sfa.nc",
-        mri="data/processed/mri-features.nc",
+        mri="data/processed/mri-features-all.nc",
     output:
         "models/mri_from_factors/performance.nc",
     shell:
@@ -347,7 +368,7 @@ rule cross_validate_mri_from_factors:
 rule cross_validate_factors_from_mri:
     input:
         script="src/models/cv_factors_from_mri.py",
-        mri="data/processed/mri-features.nc",
+        mri="data/processed/mri-features-all.nc",
         sfa="models/sfa_tcga/sfa.nc",
     output:
         "models/factors_from_mri/performance.nc",
@@ -456,16 +477,30 @@ rule select_best_sfa:
 # ANALYSIS                                                             #
 ########################################################################
 
+mri_features = [
+    "mri-features-all", "mri-features-all-fa", "mri-features-all-reg-volume",
+    "mri-features-er", "mri-features-er-fa", "mri-features-er-reg-volume",
+]
+
 all_targets['analyses'] = expand(
     "analyses/gsea/{features}_{gene_set_abs}.nc",
-    features=[
-        "mri-features-all", "mri-features-all-fa",
-        "mri-features-all-reg-volume",
-        "mri-features-er", "mri-features-er-fa", "mri-features-er-reg-volume",
-    ],
+    features=mri_features,
     gene_set_abs=["c2.cgp_F", "c2.cp_T", "h.all_T"],
+) + expand(
+    "analyses/de/{features}.nc",
+    features=mri_features,
 )
 
+rule differential_expression_analysis:
+    input:
+        script="src/analysis/differential-expression.R",
+        gexp="data/processed/gene-expression.nc",
+        mri="data/processed/{mri}.nc",
+    output:
+        "analyses/de/{mri}.nc"
+    shell:
+        "mkdir -p analyses/de; "
+        "{config[r]} {input.script} {input.gexp} {input.mri} {output}"
 
 rule analyse_gene_sets:
     input:
@@ -486,11 +521,14 @@ rule analyse_gene_sets:
 rule gene_set_analysis_to_netcdf:
     input:
         script="src/analysis/gsea-rds-to-nc.R",
-        rds="analyses/gsea{a}/{name}.Rds",
+        rds="analyses/gsea{a}/{variables}_{gene_set_collection}_{abs}.Rds",
     output:
-        "analyses/gsea{a,.*}/{name}.nc",
+        "analyses/gsea{a,.*}/"
+        "{variables}_{gene_set_collection,[^_/]+}_{abs,[TF]}.nc",
     shell:
-        "{config[r]} {input.script} {input.rds} {output}"
+        "{config[r]} {input.script}  {input.rds} {output} "
+        "--gene-set-collection={wildcards.gene_set_collection} "
+        "--abs={wildcards.abs}"
 
 rule gene_set_analysis_to_xlsx:
     input:
@@ -535,8 +573,8 @@ rule analyse_gene_sets_eigenbreasts:
         4 # Takes a lot of memory
     shell:
         "mkdir -p analyses/gsea; "
-        "{config[r]} {input.script} {input.gexp} {input.mri} "
-        "{wildcards.mri_var} {params.n_pc} "
+        "OPENBLAS_NUM_THREADS=1 {config[r]} {input.script} {input.gexp} "
+        "{input.mri} {wildcards.mri_var} {params.n_pc} "
         "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
         "--perms 10000"
 
@@ -551,34 +589,11 @@ all_targets['reports'] = [
     for p in Path('reports').glob("*.pmd")
 ]
 
-
-gsea_deps = [
-    "src/plot.py",
-    "src/reports/es-heatmap-fun.py",
-    "src/reports/load-gsea-fun.py",
-    "src/reports/setup-matplotlib.py",
-]
-
 report_deps = {
-    "gsea": [
-        "analyses/gsea/mri-features-all_c2.cgp_F.nc",
-        "analyses/gsea/mri-features-all_h.all_T.nc",
-        "analyses/gsea/mri-features-all_c2.cp_T.nc",
-    ] + gsea_deps,
-    "gsea-reg": [
-        "analyses/gsea/mri-features-all-reg-volume_c2.cgp_F.nc",
-        "analyses/gsea/mri-features-all-reg-volume_h.all_T.nc",
-        "analyses/gsea/mri-features-all-reg-volume_c2.cp_T.nc",
-    ] + gsea_deps,
-    "gsea-fa": [
-        "analyses/gsea/mri-features-all-fa_c2.cgp_F.nc",
-        "analyses/gsea/mri-features-all-fa_h.all_T.nc",
-        "analyses/gsea/mri-features-all-fa_c2.cp_T.nc",
-    ] + gsea_deps,
     "mri-remove-size": [
         "src/plot.py",
         "src/reports/setup-matplotlib.py",
-        "data/processed/mri-features.nc",
+        "data/processed/mri-features-all.nc",
     ],
     "cv-mri-from-factors": [
         "src/plot.py",
@@ -603,6 +618,28 @@ report_deps = {
         "models/sfa_mri_cad/mri_sweep-bics.nc",
     ]
 }
+
+features_to_report_name = {
+    "mri-features-all": "gsea",
+    "mri-features-all-fa": "gsea-fa",
+    "mri-features-all-reg-volume": "gsea-reg",
+    "mri-features-er": "gsea-er",
+    "mri-features-er-fa": "gsea-er-fa",
+    "mri-features-er-reg-volume": "gsea-er-reg",
+}
+
+for mri_f in mri_features:
+    report_deps[features_to_report_name[mri_f]] = [
+        f"analyses/gsea/{mri_f}_c2.cgp_F.nc",
+        f"analyses/gsea/{mri_f}_h.all_T.nc",
+        f"analyses/gsea/{mri_f}_c2.cp_T.nc",
+        f"analyses/de/{mri_f}.nc",
+        "src/plot.py",
+        "src/reports/es-heatmap-fun.py",
+        "src/reports/load-gsea-fun.py",
+        "src/reports/setup-matplotlib.py",
+    ]
+
 
 rule weave_report:
     input:
@@ -650,8 +687,100 @@ rule convert_notebook_to_html:
         "notebooks/{notebook}.ipynb",
     output:
         "notebooks/{notebook}.html",
+    priority: -10
     shell:
-        "{config[nbconvert]} --to html --execute {input}"
+        "{config[nbconvert]} "
+        "--ExecutePreprocessor.timeout=1800 "
+        "--to html "
+        "--execute {input}"
+
+
+########################################################################
+# FIGURES                                                              #
+########################################################################
+
+all_targets['figures'] = expand(
+    "figures/{fig}.{ext}",
+    fig=[
+        "mri-cad-correlation",
+        "fa-variance-explained",
+        "cad-factors-heatmap",
+        "gsea-heatmap_all-fa_c2.cgp_F_1",
+        "gsea-heatmap_all-fa_c2.cp_T_2",
+        "gsea-heatmap_er-fa_c2.cp_T_6",
+        "clin-boxplot-ihc_subtype-size",
+        "clin-boxplot-ihc_subtype-irregularity",
+        "clin-boxplot-ihc_subtype-pre_contrast",
+        "clin-boxplot-grade-size",
+        "clin-boxplot-grade-irregularity",
+        "clin-boxplot-grade-pre_contrast",
+        "clin-boxplot-grade-smoothness",
+        "clin-boxplot-grade-CPE",
+    ],
+    ext=['svg', 'pdf', 'png'],
+) + ['figures/figure1.pdf', 'figures/figure1.png']
+
+rule svg_to_pdf:
+    input: "figures/{fn}.svg"
+    output: "figures/{fn}.pdf"
+    shell: "inkscape --export-pdf {output} -D {input}"
+
+rule svg_to_png:
+    input: "figures/{fn}.svg"
+    output: "figures/{fn}.png"
+    shell: "inkscape --export-png {output} -D -d 300 {input}"
+
+rule figure_mri_cad_correlation:
+    input:
+        script="src/visualization/figure-mri-cad-correlation.py",
+        cad_features="data/processed/mri-features-all.nc",
+    output: "figures/mri-cad-correlation.svg"
+    shell:
+        "{config[python]} {input.script} {input.cad_features} {output}"
+
+rule figure_fa_variance_explained:
+    input:
+        script="src/visualization/figure-fa-variance-explained.py",
+        cad_features="data/processed/mri-features-all.nc",
+    output: "figures/fa-variance-explained.svg"
+    shell:
+        "{config[python]} {input.script} {input.cad_features} {output}"
+
+rule figure_cad_factors_heatmap:
+    input:
+        script="src/visualization/figure-cad-factors-heatmap.py",
+        cad_factors="data/processed/mri-features-all-fa.nc",
+    output: "figures/cad-factors-heatmap.svg"
+    shell:
+        "{config[python]} {input.script} {input.cad_factors} {output}"
+
+rule figure_clin_boxplot:
+    input:
+        script="src/visualization/figure-mri-factor-clin-boxplot.py",
+        cad_factors="data/processed/mri-features-all-fa.nc",
+        factor_annotation="config/factor_annot_all.yaml",
+        clinical_annotation="data/processed/clinical.nc",
+    output:
+        "figures/clin-boxplot-{clin}-{factor}.svg",
+        "figures/clin-boxplot-{clin}-{factor}_stats.txt",
+    shell:
+        "{config[python]} {input.script} "
+        "{input.cad_factors} {wildcards.factor} {input.factor_annotation} "
+        "{input.clinical_annotation} {wildcards.clin} "
+        "{output}"
+
+
+rule figure_gsea_heatmap_fa:
+    input:
+        script="src/visualization/figure-gsea-heatmap.py",
+        gsea="analyses/gsea/mri-features-{subset}-fa_{gene_set}_{abs}.nc",
+        sel_genesets="src/visualization/"
+            "sel-gs_{subset}_{gene_set}_{abs}_{factor}.tsv"
+    output: "figures/gsea-heatmap_{subset}-fa_{gene_set}_{abs}_{factor}.svg"
+    shell:
+        "{config[python]} {input.script} {input.gsea} {input.sel_genesets} "
+        "{wildcards.factor} {output}"
+
 
 
 ########################################################################

@@ -61,8 +61,7 @@ main <- function(args) {
     gexp$read_count <- gexp$read_count[, sel_samples]
 
     res <- run_gsea(gexp$read_count, mri, gexp$entrez_gene, args$gene_sets,
-                    nperm=args$perms, abs=args$abs, n_threads=args$threads,
-                    gene_score_fn=score_genes_limma_independend)
+                    nperm=args$perms, abs=args$abs, n_threads=args$threads)
     saveRDS(res, args$out)
 
 }

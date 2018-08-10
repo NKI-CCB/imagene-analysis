@@ -20,7 +20,9 @@ long_names <- c(
 
 parse_args <- function() {
     args <- c('gsea_rds', 'out')
-    option_list <- list()
+    option_list <- list(
+        make_option('--gene-set-collection', default=""),
+        make_option('--abs', default=""))
     usage <- paste("%prog [options] ",  paste(args, collapse=" "), collapse="")
     parser <- OptionParser(usage=usage, option_list=option_list)
     arguments <- optparse::parse_args(parser,
@@ -67,6 +69,9 @@ main <- function() {
                       start=c(1, feature_i), count=c(length(gene_sets), 1))
         }
     }
+    ncatt_put(out_f, 0, 'gene_set_collection', args$`gene-set-collection`,
+              'text')
+    ncatt_put(out_f, 0, 'absolute', as.logical(args$abs), 'short')
     nc_close(out_f)
 }
 

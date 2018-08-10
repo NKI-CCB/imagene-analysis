@@ -13,18 +13,42 @@ Then you can process the data, train models and run analyses:
 make all
 ```
 
+Remote files
+------------
+
+Data is not included in this repository. The download method and location of
+the data can be specified in the `config/snakemake.yaml` file.
+
+### Pathway Analysis Requirements ###
+
+The pathway analyses requires the msigdb files release 5.2. These cannot be
+downloaded automatically, as registration is required. Before running the
+pathway analysis, download `msigdb_v5.2_files_to_download_locally.zip`
+from the [msigdb site](http://software.broadinstitute.org/gsea/downloads.jsp#msigdb)
+under Archived Releases and place it into `data/external/msigdb`. The scripts
+will extract the required files from the archive.
+
+
+
 Project Organization
 ------------
 
     ├── LICENSE
+    │
     ├── Makefile           <- Makefile with commands like `make all` and `make venv`.
-    ├── Snakefile          <- Snakemake file with rules to run this project.
-    │                         These rules should be run inside the virtual environment.
+    │
+    ├── Snakefile          <- Snakemake file with rules to run this project. These rules
+    │                         should be run inside a virtual environment containing the packages
+    │                         in requirements.txt (Python) and requirement.R (R). The Makefile can
+    │                         set this environment up on some systems.
+    │
     ├── README.md          <- The top-level README for developers using this project.
     │
     ├── docs               <- Project Documentation using Sphinx.
     │
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
+    │
+    ├── config/snakemake.yaml <- Configuration of the workflow. Set version of Python and R used here.
     │
     ├── data
     │   ├── raw            <- The original, immutable data dump.
@@ -35,7 +59,7 @@ Project Organization
     │
     ├── notebooks          <- Jupyter notebooks for exploration. Naming convention is date (for
     │                         ordering), the creator's initials, and a short `-` delimited
-    │                         description, e.g. `2017-01-01-jan-initial-data-exploration`.
+    │                         description, e.g. `2017-01-01-tb-initial-data-exploration`.
     │
     ├── models             <- Trained models and model predictions.
     │
@@ -43,6 +67,7 @@ Project Organization
     │
     ├── reports            <- Analysis reports, such as pweave or rmarkdown reports.
     │   └── figures        <- Generated graphics and figures to be used in reporting.
+    ├── figures            <- Figures for in the manuscript.
     │
     ├── venv/              <- Suggested directory for virtual environment
     │

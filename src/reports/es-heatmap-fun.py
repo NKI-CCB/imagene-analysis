@@ -5,6 +5,8 @@ def plot_ds(ds, fdr, le_prop=0.0, abs=True):
         gene_set=np.logical_not(ds['significance_mask'])
                  .sum('mri_feature') > 0,
     )
+    if ds.dims['gene_set'] == 0:
+        return
     if abs:
         zlim = [0, np.max(ds['nes'])]
         cmap='viridis'
