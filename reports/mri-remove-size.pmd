@@ -29,7 +29,7 @@ Setup style of plots.
 Load MRI CAD features.
 
 ```python load-mri
-mri_ds = xr.open_dataset('data/processed/mri-features.nc')
+mri_ds = xr.open_dataset('data/processed/mri-features-all.nc')
 del mri_ds['Comment']
 del mri_ds['MultiFocal']
 mri = mri_ds.to_array('cad_feature', 'mri_cad_features')
@@ -68,7 +68,7 @@ with plot.subplots(3, 1, sharex=True) as (fig, axs):
     )
     axs[2].set_xlabel("PC")
     axs[2].set_ylabel("Delta\nExplained Variance")
-n_components = 11
+n_components = 9
 ```
 
 ```python heatmap-pca

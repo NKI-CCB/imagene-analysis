@@ -331,7 +331,7 @@ rule factor_analysis_mri_features:
     output:
         "data/processed/mri-features-{subset}-fa.nc"
     shell:
-        "{config[python]} {input.script} 10 {input.mri} {output}"
+        "{config[python]} {input.script} 9 {input.mri} {output}"
 
 ########################################################################
 # MODELS                                                               #
