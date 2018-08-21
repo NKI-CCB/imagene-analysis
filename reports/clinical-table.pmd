@@ -1,0 +1,86 @@
+---
+title: Table of clinical paramters
+author: Tycho Bismeijer
+date: 2018-08-20
+---
+
+## Setup ## {.collapsed}
+
+```python load-libs
+from collections import Counter
+
+from IPython.display import display, Markdown
+import numpy as np
+from tabulate import tabulate
+import pandas as pd
+import xarray as xr
+```
+
+
+```python load-data
+clinical = xr.open_dataset('data/processed/clinical_all-patients.nc',
+                           decode_cf=False)
+clinical_rna = xr.open_dataset('data/processed/clinical.nc',
+                               decode_cf=False)
+clinical['RNA'] = ('case', np.isin(clinical['case'], clinical_rna['case']))
+```
+
+## Table ##
+```python table
+clin_table = dict()
+def summarize_continous(desc, var, unit):
+    mean_all = clinical[var].mean().item()
+    min_all = clinical[var].min().item()
+    max_all = clinical[var].max().item()
+    mean_rna = clinical[var][clinical['RNA']].mean().item()
+    min_rna = clinical[var][clinical['RNA']].min().item()
+    max_rna = clinical[var][clinical['RNA']].max().item()
+    clin_table[(desc, '')] = [
+        f"{mean_all:.0f} {unit} ({min_all:.0f}-{max_all:.0f})",
+        f"{mean_rna:.0f} {unit} ({min_rna:.0f}-{max_rna:.0f})"]
+
+def summarize_factor(desc, var):
+    fill_value = clinical[var].attrs.get('_FillValue', '')
+    v = clinical[var]
+    v_all = v[v != fill_value]
+    v_rna = v[(v != fill_value) & clinical['RNA']]
+    count_all = Counter(v_all.values)
+    count_rna = Counter(v_rna.values)
+    
+    for level in sorted(count_all.keys()):
+        p_all = count_all[level] / len(v_all)
+        p_rna = count_rna[level] / len(v_rna)
+        clin_table[(desc, str(level))] = [
+            f"{count_all[level]: =3} ({p_all:=3.0%})",
+            f"{count_rna[level]: =3} ({p_rna:=3.0%})"]
+
+def summarize_boolean(desc, var):
+    fill_value = clinical[var].attrs['_FillValue']
+    v = clinical[var]
+    v_all = v[v != fill_value]
+    v_rna = v[(v != fill_value) & clinical['RNA']]
+    count_all = sum(v_all.values)
+    count_rna = sum(v_rna.values)
+    p_all = count_all / len(v_all)
+    p_rna = count_rna / len(v_rna)
+    clin_table[(desc, '')] = [f"{count_all: =3} ({p_all:=3.0%})",
+                              f"{count_rna: =3} ({p_rna:=3.0%})"]
+
+summarize_continous('Age (Range)', 'age_at_diagnosis', 'years')
+summarize_continous('Tumor Size (Range)', 'largest_diameter_mri',
+                    'mm')
+summarize_factor('Grade', 'grade')
+summarize_factor('Subtype', 'ihc_subtype')
+summarize_boolean('Radiotherapy', 'adjuvant_radiotherapy')
+summarize_boolean('Chemotherapy', 'adjuvant_chemotherapy')
+summarize_boolean('Hormonal therapy', 'adjuvant_hormonal_therapy')
+summarize_boolean('HER2 therapy', 'adjuvant_anti_her2_therapy')
+cindex = [k for k in clin_table.keys()]
+columns = [np.array([k[0] for k in cindex], 'object'),
+           np.array([k[1] for k in cindex], 'object')]
+d = np.array([clin_table[k] for k in cindex], 'object').T
+clin_table = pd.DataFrame(d,
+                          index=['Full Cohort', 'With Gene Expression'],
+                          columns=columns)
+display(Markdown(tabulate(clin_table.T.reset_index(), headers='keys')))
+```

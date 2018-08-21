@@ -279,6 +279,15 @@ rule process_clincal:
     shell:
         "{config[python]} {input.script} {input.tsv} {output} "
 
+rule process_clincal_all_patients:
+    input:
+        script="src/data/process_clinical_all-patients.py",
+        tsv="data/raw/imagene_clinical_all-patients.tsv",
+    output:
+        "data/processed/clinical_all-patients.nc"
+    shell:
+        "{config[python]} {input.script} {input.tsv} {output} "
+
 
 rule select_er:
     input:
