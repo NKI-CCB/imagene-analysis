@@ -68,7 +68,7 @@ with plot.subplots(3, 1, sharex=True) as (fig, axs):
     )
     axs[2].set_xlabel("PC")
     axs[2].set_ylabel("Delta\nExplained Variance")
-n_components = 9
+n_components = 10
 ```
 
 ```python heatmap-pca
@@ -181,7 +181,7 @@ with plot.subplots(3, 1, sharex=True) as (fig, axs):
     )
     axs[2].set_xlabel("PC")
     axs[2].set_ylabel("Delta\nExplained Variance")
-n_components = 10
+n_components = 9
 ```
 
 
