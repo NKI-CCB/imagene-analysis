@@ -35,7 +35,7 @@ def plot_mri_cad_factor_correlation(mri_features, out):
             cor,
             mask=np.tri(cor.shape[0]) < 0.5,
             aspect='equal',
-            xlabel="CAD Feature", ylabel="CAD Feature",
+            xlabel="MR Feature", ylabel="MR Feature",
             xticklabels=['']*cor.shape[0],
             yticklabels=[feature_display_names[f]
                          for f in cor.coords['cad_feature'].values],

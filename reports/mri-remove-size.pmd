@@ -162,6 +162,7 @@ pca_adj.fit((mri_adj / mri_adj.std('case')).values)
 
 ```python pca-adj-ev
 total_var = np.sum(pca.explained_variance_)
+print(pca_adj.explained_variance_ / total_var)
 with plot.subplots(3, 1, sharex=True) as (fig, axs):
     axs[0].plot(
         range(1, len(pca_adj.explained_variance_)+1),
@@ -174,14 +175,14 @@ with plot.subplots(3, 1, sharex=True) as (fig, axs):
     )
     axs[1].set_ylabel("Explained Variance")
     axs[2].plot(
-        range(2, len(pca_adj.explained_variance_)+1),
-        abs(pca_adj.explained_variance_[1:] -
-            pca_adj.explained_variance_[:-1]) /
+        range(1, len(pca_adj.explained_variance_)),
+        (pca_adj.explained_variance_[:-1] -
+            pca_adj.explained_variance_[1:]) /
         total_var,
     )
     axs[2].set_xlabel("PC")
     axs[2].set_ylabel("Delta\nExplained Variance")
-n_components = 9
+n_components = 8
 ```
 
 

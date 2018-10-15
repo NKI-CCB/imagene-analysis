@@ -27,36 +27,41 @@ def plot_fa_variance_explained(mri_features, out):
 
         axs[0].plot(
             range(1, len(pca.explained_variance_)+1),
-            np.cumsum(pca.explained_variance_) / total_var,
+            100 * np.cumsum(pca.explained_variance_) / total_var,
             clip_on=False, zorder=100,
         )
-        axs[0].set_ylim(top=1.0)
-        axs[0].set_ylabel("$\Sigma$EV")
+        axs[0].set_ylim(top=100.0)
+        axs[0].set_ylabel("$\Sigma$EV (%)")
         axs[1].plot(
             range(1, len(pca.explained_variance_)+1),
-            pca.explained_variance_ / total_var,
+            100 * pca.explained_variance_ / total_var,
             clip_on=False, zorder=100,
         )
         axs[1].set_ylim(bottom=0.0)
-        axs[1].set_ylabel("EV")
+        axs[1].set_ylabel("EV (%)")
         axs[2].plot(
             range(2, len(pca.explained_variance_)+1),
-            abs(pca.explained_variance_[1:] -
-                pca.explained_variance_[:-1]) /
+            100 * abs(pca.explained_variance_[1:] -
+                      pca.explained_variance_[:-1]) /
             total_var,
             clip_on=False, zorder=100,
         )
         axs[2].set_ylim(bottom=0.0)
-        axs[2].set_ylabel("$\Delta$EV")
+        axs[2].set_ylabel("$\Delta$EV (%)")
 
         for ax in axs:
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
             ax.spines['left'].set_position(('outward', 10))
+            ax.axvline(8, ls='-', lw=0.5, color='grey')
 
         axs[2].set_xlabel("Principal Component")
         axs[2].set_xlim(1, len(pca.explained_variance_))
-        axs[2].set_xticks([1, 5, 10, 15, 20, len(pca.explained_variance_)])
+        axs[2].set_xticks([1, 6, 11, 16, 21])
+        axs[2].set_xticks([8], minor=True)
+        axs[0].set_xticklabels('', minor=True)
+        axs[1].set_xticklabels('', minor=True)
+        axs[2].set_xticklabels(['8'], {'fontsize': 8}, minor=True)
 
         fig.savefig(out, format="svg")
 

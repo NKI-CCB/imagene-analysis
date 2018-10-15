@@ -20,8 +20,8 @@ def plot_mri_cad_factors(cad_factors, out):
         plot.heatmap(
             fa_dataset['loadings'].T,
             aspect='equal',
-            xlabel="CAD Factor",
-            ylabel="CAD Feature",
+            xlabel="MR Factor",
+            ylabel="MR Feature",
             yticklabels=[feature_display_names[f]
                          for f in fa_dataset.coords['cad_feature'].values],
             zlabel="Loading",

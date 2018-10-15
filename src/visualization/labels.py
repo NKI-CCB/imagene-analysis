@@ -9,7 +9,6 @@ feature_order = [
     'uptake_speed',
     'top_init_enhancement', 'top_late_enhancement',
     'ser', 'washout',
-    'mean_vox_val', 'variance_vox_val',
     'circularity',
     'irregularity',
     'PCE_top10percent',
@@ -33,13 +32,13 @@ feature_display_names = {
     'uptake_speed': "Uptake Speed",
     'top_init_enhancement': "Top Initial Enhancement",
     'top_late_enhancement': "Top Late Enhancement",
-    'ser': "SER",
+    'ser': "Signal Enhancement Ratio",
     'washout': "Washout",
     'mean_vox_val': "Average Pre-Contrast Voxel Value",
     'variance_vox_val': "Variance Pre-Contrast Voxel Value",
     'circularity': "Circularity",
     'irregularity': "Irregularity",
-    'PCE_top10percent': "CPE",
+    'PCE_top10percent': "Contralateral Parenchymal Enhancement",
 }
 
 factor_display_names = {

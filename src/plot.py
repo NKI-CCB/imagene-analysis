@@ -95,7 +95,8 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
             row_cluster_method='average', col_dendrogram=False,
             col_dist_metric='euclidean', col_cluster_method='average',
             ax, cmap=None, norm=None, symmetric=False, cbar=True,
-            method='imshow'):
+            edgecolors='face',
+            method='imshow', **kwargs):
     if row_dendrogram or col_dendrogram:
         import scipy.cluster.hierarchy as scipy_ch
         import scipy.spatial.distance as scipy_sd
@@ -140,8 +141,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         col_linkage = scipy_ch.linkage(col_dist, col_cluster_method)
         col_order = scipy_ch.leaves_list(col_linkage)
 
-    Zo = Z.copy()
-    Zo[Zmask] = np.nan
+    Zo = np.ma.masked_array(Z.copy(), mask=Zmask)
     if row_order is not None:
         Zo = Zo[row_order, :]
     if col_order is not None:
@@ -164,7 +164,7 @@ def heatmap(x, y=None, z=None, mask=None, *, xticklabels=None,
         ytick_adjust = 0.0
     elif method == 'pcolormesh':
         c = ax.pcolormesh(Zo, cmap=cmap, vmin=zlim[0], vmax=zlim[1], norm=norm,
-                          edgecolors='face', lw=0)
+                          edgecolors=edgecolors, lw=0, **kwargs)
         xtick_adjust = 0.5
         ytick_adjust = 0.5
     else:

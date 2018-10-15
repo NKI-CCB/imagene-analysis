@@ -1,7 +1,9 @@
+from copy import copy
 from itertools import count
 
 import click
 import matplotlib
+import matplotlib.cm
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -10,7 +12,7 @@ from lib import click_utils
 import plot
 from visualization.style import set_style
 
-gs_labels = [chr(c) for c in range(ord('a'), ord('z')+1)]
+gs_labels = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
 gs_label_props = dict(
     weight='bold',
     bbox=dict(boxstyle="circle,pad=0.15",
@@ -19,6 +21,7 @@ gs_label_props = dict(
     color='white',
     fontsize=9,
 )
+
 
 def wf_plot(vals, highlight, ax, ylabel="", yscale="linear", ylim=None,
             xbaseline=None, reverse=False):
@@ -95,10 +98,26 @@ class SFDRNormalize(matplotlib.colors.Normalize):
         data_points = [self.vmin, -self.sig_threshold, 0, self.sig_threshold,
                        self.vmax]
         norm_points = [0, 0.499, 0.5, 0.501, 1]
-        return np.ma.masked_array(np.interp(value, data_points, norm_points))
+        result, _ = self.process_value(value)
+        return np.ma.masked_array(np.interp(result, data_points, norm_points),
+                                  mask=np.ma.getmask(result))
 
 
-def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig):
+class FDRNormalize(matplotlib.colors.Normalize):
+    def __init__(self, vmin=None, vmax=None, clip=False,
+                 sig_threshold=0.05):
+        self.sig_threshold = sig_threshold
+        matplotlib.colors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        data_points = [0, self.sig_threshold, self.vmax]
+        norm_points = [0, 0.01, 1]
+        result, _ = self.process_value(value)
+        return np.ma.masked_array(np.interp(result, data_points, norm_points),
+                                  mask=np.ma.getmask(result))
+
+
+def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig, abs):
     plusminus_sign = chr(0x00B1)
 
     genesets = genesets_annot['gene_set'].values
@@ -113,36 +132,59 @@ def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig):
     sel_gsea = gsea.reindex_like(genesets_annot)
 
     # Heatmap
+    if abs:
+        cmap = copy(matplotlib.cm.Reds)
+    else:
+        cmap = copy(matplotlib.cm.RdBu_r)
+    cmap.set_bad('0.8')
     sel_gsea['slogfdr'] = np.sign(sel_gsea['nes']) * -np.log10(sel_gsea['fdr'])
     ax = fig.add_axes([wf_hmargin, table_prop,
                        1-wf_hmargin, hm_prop])
+    if abs:
+        zlim = [0, -np.log10(0.05)]
+        norm = FDRNormalize(sig_threshold=-np.log10(0.25))
+    else:
+        zlim = [np.log10(0.05), -np.log10(0.05)]
+        norm = SFDRNormalize(sig_threshold=-np.log10(0.25))
     hm = plot.heatmap(
-        sel_gsea['slogfdr'],
-        zlim=[-2, 2],
-        norm=SFDRNormalize(sig_threshold=-np.log10(0.25)),
+        sel_gsea['slogfdr'][::-1, :],
+        mask=sel_gsea['fdr'][::-1, :] > 0.25,
+        zlim=zlim,
+        norm=norm,
+        cmap=cmap,
         method='pcolormesh',
         cbar=False,
         ax=ax,
     )
+    for i in range(sel_gsea['slogfdr'].shape[1]):
+        ax.axvline(i, color='white', linewidth=2)
     ax_cbar = fig.add_axes(
         [wf_hmargin+cbar_vmargin, 0.02,
          1-wf_hmargin-2*cbar_vmargin, 0.03],
     )
     cbar = fig.colorbar(hm, ax_cbar, orientation='horizontal')
-    fdr_ticks_at = np.array([0.25, 0.05, 0.01])
+    fdr_ticks_at = np.array([0.25, 0.1, 0.05])
     lfdr_ticks_at = -np.log10(fdr_ticks_at)
-    cbar_tick_lv = np.append(np.append(-lfdr_ticks_at[::-1], [0.0]),
-                             lfdr_ticks_at)
-    cbar_tick_v = np.append(-np.append(fdr_ticks_at[::-1], [1.0]),
-                            fdr_ticks_at)
+    if abs:
+        cbar_tick_lv = np.append([0.0], lfdr_ticks_at)
+        cbar_tick_v = np.append([1.0], fdr_ticks_at)
+    else:
+        cbar_tick_lv = np.append(np.append(-lfdr_ticks_at[::-1], [0.0]),
+                                 lfdr_ticks_at)
+        cbar_tick_v = np.append(-np.append(fdr_ticks_at[::-1], [1.0]),
+                                fdr_ticks_at)
     cbar.set_ticks(cbar_tick_lv)
-    ax_cbar.set_xlabel("signed FDR")
+    if abs:
+        ax_cbar.set_xlabel("FDR")
+    else:
+        ax_cbar.set_xlabel("signed FDR")
     cbar_tick_labels = [f"{v}" for v in cbar_tick_v]
-    cbar_tick_labels[len(cbar_tick_labels) // 2] = plusminus_sign + "1.0"
+    if not abs:
+        cbar_tick_labels[len(cbar_tick_labels) // 2] = plusminus_sign + "1.0"
     cbar.ax.set_xticklabels(cbar_tick_labels)
     ax.set_xticklabels("")
     ax.tick_params(bottom='off')
-    ax.set_ylabel("CAD Factor")
+    ax.set_ylabel("MR Factor")
     ax.set_xlabel("")
     ax.spines['top'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -185,7 +227,7 @@ def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig):
     table.auto_set_font_size(False)
     table.set_fontsize(8)
     for (col, row), cell in table.get_celld().items():
-        cell.set_linewidth(0.1)
+        cell.set_linewidth(2)
         cell.set_edgecolor('w')
         if col % 2 == 1:
             cell.set_facecolor('#eeeeee')
@@ -203,6 +245,11 @@ def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig):
 @click.argument('factor', type=int)
 @click.argument('out', type=click_utils.out_path)
 def plot_gsea_heatmap_(gsea_results, sel_genesets, factor, out):
+    print(gsea_results)
+    if gsea_results.endswith("_T.nc"):
+        abs = True
+    else:
+        abs = False
     gsea = xr.open_dataset(gsea_results).load()
     gsea['gene_set'] = (xr.apply_ufunc(np.char.decode, gsea['gene_set'])
                         .astype('object'))
@@ -214,7 +261,7 @@ def plot_gsea_heatmap_(gsea_results, sel_genesets, factor, out):
 
     factor_idx = factor - 1
     with plot.figure(figsize=(7.0, 3.5)) as fig:
-        plot_gsea_heatmap(gsea, geneset_annot, factor_idx, fig)
+        plot_gsea_heatmap(gsea, geneset_annot, factor_idx, fig, abs)
         fig.savefig(out, format="svg")
 
 
