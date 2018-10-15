@@ -518,7 +518,7 @@ rule analyse_gene_sets:
         mri="data/processed/{mri}.nc",
         gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
     output:
-        protected("analyses/gsea/{mri}_{gene_set}_{abs}.Rds"),
+        protected("analyses/gsea/{mri}_{gene_set}_{abs,T|F}.Rds"),
     threads:
         4 # Takes a lot of memory
     shell:
@@ -526,6 +526,22 @@ rule analyse_gene_sets:
         "{config[r]} {input.script} {input.gexp} {input.mri} "
         "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
         "--perms 10000"
+
+rule analyse_gene_sets_keep_es:
+    input:
+        script="src/analysis/analyse-gene-set-enrichment.R",
+        gexp="data/processed/gene-expression.nc",
+        mri="data/processed/{mri}.nc",
+        gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
+    output:
+        protected("analyses/gsea/{mri}_{gene_set}_{abs}+es.Rds"),
+    threads:
+        4 # Takes a lot of memory
+    shell:
+        "mkdir -p analyses/gsea; "
+        "{config[r]} {input.script} {input.gexp} {input.mri} "
+        "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
+        "--perms 10000 --return es_null"
 
 rule gene_set_analysis_to_netcdf:
     input:
