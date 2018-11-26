@@ -11,20 +11,14 @@
   id: 'late_enhancement'
   sign: -1
 5:
-  id: 'pre_contrast'
-  sign: -1
-6:
   id: 'CPE'
   sign: +1
-7:
+6:
   id: 'init_enhancement'
   sign: -1
 8:
-  id: 'circularity'
-  sign: -1
-9:
+  id: 'shape'
+  sign: +1
+3:
   id: 'sharpness_mean'
   sign: -1
-10:
-  id: 'irregularity'
-  sign: +1

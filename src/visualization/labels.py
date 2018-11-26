@@ -43,10 +43,10 @@ feature_display_names = {
 
 factor_display_names = {
     'size': "Tumor Size",
+    'shape': "Tumor Shape",
     'smoothness': "Smoothness",
     'sharpness_var': "Sharpness (variation)",
     'late_enhancement': "Late Enhancement",
-    'pre_contrast': "Pre-Contrast Voxel Value",
     'CPE': "CPE",
     'init_enhancement': "Initial Enhancement",
     'circularity': "Circularity",

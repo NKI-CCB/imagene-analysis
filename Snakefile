@@ -717,14 +717,7 @@ all_targets['figures'] = expand(
         "gsea-heatmap_all-fa_c2.cgp_F_1",
         "gsea-heatmap_all-fa_c2.cp_T_2",
         "gsea-heatmap_er-fa_c2.cp_T_6",
-        "clin-boxplot-ihc_subtype-size",
-        "clin-boxplot-ihc_subtype-irregularity",
-        "clin-boxplot-ihc_subtype-pre_contrast",
-        "clin-boxplot-grade-size",
-        "clin-boxplot-grade-irregularity",
-        "clin-boxplot-grade-pre_contrast",
-        "clin-boxplot-grade-smoothness",
-        "clin-boxplot-grade-CPE",
+        "clin-boxplot-ihc_subtype-volume",
     ],
     ext=['svg', 'pdf', 'png'],
 ) + ['figures/figure1.pdf', 'figures/figure1.png']
@@ -758,23 +751,37 @@ rule figure_fa_variance_explained:
 rule figure_cad_factors_heatmap:
     input:
         script="src/visualization/figure-cad-factors-heatmap.py",
-        cad_factors="data/processed/mri-features-all-fa.nc",
-    output: "figures/cad-factors-heatmap.svg"
+        cad_factors="data/processed/mri-features-{subset}-fa.nc",
+    output: "figures/cad-factors-{subset}-heatmap.svg"
     shell:
         "{config[python]} {input.script} {input.cad_factors} {output}"
 
-rule figure_clin_boxplot:
+rule figure_clin_boxplot_factor:
     input:
         script="src/visualization/figure-mri-factor-clin-boxplot.py",
         cad_factors="data/processed/mri-features-all-fa.nc",
         factor_annotation="config/factor_annot_all.yaml",
         clinical_annotation="data/processed/clinical.nc",
     output:
-        "figures/clin-boxplot-{clin}-{factor}.svg",
-        "figures/clin-boxplot-{clin}-{factor}_stats.txt",
+        "figures/clin-boxplotf-{clin}-{factor}.svg",
+        "figures/clin-boxplotf-{clin}-{factor}_stats.txt",
     shell:
         "{config[python]} {input.script} "
         "{input.cad_factors} {wildcards.factor} {input.factor_annotation} "
+        "{input.clinical_annotation} {wildcards.clin} "
+        "{output}"
+
+rule figure_clin_boxplot_feature:
+    input:
+        script="src/visualization/figure-mri-feature-clin-boxplot.py",
+        mri_features="data/processed/mri-features-all.nc",
+        clinical_annotation="data/processed/clinical.nc",
+    output:
+        "figures/clin-boxplot-{clin}-{feature}.svg",
+        "figures/clin-boxplot-{clin}-{feature}_stats.txt",
+    shell:
+        "{config[python]} {input.script} "
+        "{input.mri_features} {wildcards.feature} "
         "{input.clinical_annotation} {wildcards.clin} "
         "{output}"
 

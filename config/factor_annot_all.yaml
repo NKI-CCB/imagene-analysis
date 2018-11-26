@@ -2,29 +2,23 @@
   id: 'size'
   sign: +1
 2:
-  id: 'smoothness'
+  id: 'init_enhancement'
   sign: -1
 3:
-  id: 'sharpness_var'
-  sign: +1
+  id: 'smoothness'
+  sign: -1
 4:
   id: 'late_enhancement'
   sign: +1
 5:
-  id: 'pre_contrast'
-  sign: -1
-6:
   id: 'CPE'
   sign: +1
+6:
+  id: 'sharpness_var'
+  sign: -1
 7:
-  id: 'init_enhancement'
+  id: 'shape'
   sign: -1
 8:
-  id: 'circularity'
-  sign: -1
-9:
   id: 'sharpness_mean'
   sign: -1
-10:
-  id: 'irregularity'
-  sign: +1
