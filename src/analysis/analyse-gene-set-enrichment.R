@@ -1,6 +1,7 @@
 # CRAN
 library(ncdf4)
 library(optparse)
+library(stringr)
 library(tibble)
 
 # Bioconductor
@@ -35,13 +36,17 @@ parse_args <- function() {
     option_list <- list(
         make_option("--threads", default=1L, help="Number of threads"),
         make_option("--perms", default=1000L, help="Number of permutations"),
+        make_option("--return", default="",
+                    help="Extra statistics to keep"),
         make_option("--abs", default=FALSE, help="Use absolute scores"))
     usage <- paste("%prog [options] ",  paste(args, collapse=" "), collapse="")
     parser <- OptionParser(usage=usage, option_list=option_list)
     arguments <- optparse::parse_args(parser,
                                       positional_arguments=length(args))
     names(arguments$args) <- args
-    c(as.list(arguments$args), arguments$options)
+    res <- c(as.list(arguments$args), arguments$options)
+    res$return <- str_split(res$return, ',')[[1]]
+    res
 }
 
 main <- function(args) {
@@ -61,10 +66,11 @@ main <- function(args) {
     gexp$read_count <- gexp$read_count[, sel_samples]
 
     res <- run_gsea(gexp$read_count, mri, gexp$entrez_gene, args$gene_sets,
-                    nperm=args$perms, abs=args$abs, n_threads=args$threads)
+                    nperm=args$perms, abs=args$abs, n_threads=args$threads,
+                    return_values=args$return)
     saveRDS(res, args$out)
-
 }
 
 args <- parse_args()
+print(args)
 main(args)

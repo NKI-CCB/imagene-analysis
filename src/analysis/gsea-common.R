@@ -43,7 +43,8 @@ read_gexp <- function(fn) {
 }
 
 run_gsea <- function(gexp_counts, y, gene_ids, gs_fn, nperm, abs,
-                     n_threads, gene_score_fn=score_genes_limma) {
+                     n_threads, gene_score_fn=score_genes_limma,
+                     return_values) {
 
     stopifnot(colnames(gexp_counts) == colnames(y))
 
@@ -60,5 +61,6 @@ run_gsea <- function(gexp_counts, y, gene_ids, gs_fn, nperm, abs,
         gene.names=gene_ids,
         es.fn=ggsea_weighted_ks, sig.fun=ggsea_calc_sig,
         verbose=T, nperm=nperm, block.size=64, abs=abs,
-        parallel=(n_threads > 1))
+        parallel=(n_threads > 1),
+        return_values=return_values)
 }
