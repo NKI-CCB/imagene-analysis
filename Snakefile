@@ -51,7 +51,6 @@ all_targets['data'] = [
     "data/processed/gene-expression.nc",
     "data/processed/mri-features-all.nc",
     "data/processed/mri-features-er.nc",
-    "data/processed/mri-eigenbreasts.nc",
     "data/processed/clinical.nc",
 ]
 
@@ -93,31 +92,10 @@ rule download_mri_features:
     run:
         download(params.file, output[0])
 
-rule download_eigenbreasts:
-    output: "data/raw/eigenbreasts_{subset}.xlsx"
-    params:
-        file="mri/2017-08-09-eigenbreasts/eigenbreasts_Elastix_{subset}.xlsx"
-    run:
-        download(params.file, output[0])
-
 rule download_clinical_data:
     output: "data/raw/imagene_clinical.tsv"
     params:
         file="clinical/2016-01-19-imagene_clinical.tsv"
-    run:
-        download(params.file, output[0])
-
-rule download_sfa_tcga_breast:
-    output: "data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5"
-    params:
-        file="external/tcga-breast-gexp+rppa+cn-sfa-solution.h5"
-    run:
-        download(params.file, output[0])
-
-rule download_sfa_tcga_breast_conf:
-    output: "data/external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml"
-    params:
-        file="external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml"
     run:
         download(params.file, output[0])
 
@@ -193,30 +171,6 @@ rule process_zwart2011_signature:
         "{config[python]} {input.script} {input.xls} {input.refseq} "
         "{input.ensembl} {output}"
 
-rule tcga_factors_to_tsv:
-    input:
-        "data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5",
-    output:
-        "data/to_share/tcga-breast-gexp+rppa+cn-sfa-factors.tsv",
-    run:
-        import h5py
-        import xarray as xr
-        import pandas as pd
-        import numpy as np
-
-        with h5py.File(input[0]) as f:
-            samples = [s.decode() for s in f['sample names']]
-            factor_names = ['Factor {}'.format(i+1)
-                            for i in range(f['factors'].shape[1])]
-            tcga_factors = xr.DataArray(
-                data=np.array(f['factors']),
-                dims=['Patient', 'factor'],
-                coords={
-                    'Patient': np.array(samples, 'object'),
-                    'factor': np.array(factor_names, 'object'),
-                },
-            )
-            tcga_factors.to_pandas().to_csv(output[0], sep='\t')
 
 rule process_mri_features:
     input:
@@ -227,27 +181,6 @@ rule process_mri_features:
     shell:
         "{config[python]} {input.script} {input.xlsx} {output} "
         "--study-nr-col=MARGINSstudyNr"
-
-rule process_eigenbreasts:
-    input:
-        "src/data/process_mri_eigenbreasts.py",
-        "data/raw/eigenbreasts_ipsi_ds2.xlsx",
-        "data/raw/eigenbreasts_ipsi_ds4.xlsx",
-        "data/raw/eigenbreasts_ipsi_ds8.xlsx",
-        "data/raw/eigenbreasts_ipsi_ds16.xlsx",
-        "data/raw/eigenbreasts_contra_ds2.xlsx",
-        "data/raw/eigenbreasts_contra_ds4.xlsx",
-        "data/raw/eigenbreasts_contra_ds8.xlsx",
-        "data/raw/eigenbreasts_contra_ds16.xlsx",
-        "data/raw/eigenbreasts_both_ds2.xlsx",
-        "data/raw/eigenbreasts_both_ds4.xlsx",
-        "data/raw/eigenbreasts_both_ds8.xlsx",
-        "data/raw/eigenbreasts_both_ds16.xlsx",
-    output:
-        "data/processed/mri-eigenbreasts.nc"
-    shell:
-        "{config[python]} {input} {output} "
-        "--study-nr-col=StudyID"
 
 rule process_gene_expression:
     input:
@@ -300,16 +233,6 @@ rule select_er:
         "{config[python]} {input.script} {input.mri} --er-positive "
         "{input.clinical} {output}"
 
-rule concat_data_for_sfa:
-    input:
-        script="src/data/concat_data_sfa.py",
-        gexp="data/processed/gene-expression-voom.nc",
-        mri="data/processed/mri-features-all.nc",
-    output:
-        "data/processed/concat-data.nc",
-    shell:
-        "{config[python]} {input.script} {input.gexp} {input.mri} {output}"
-
 
 ########################################################################
 # FEATURES                                                             #
@@ -341,145 +264,6 @@ rule factor_analysis_mri_features:
         "data/processed/mri-features-{subset}-fa.nc"
     shell:
         "{config[python]} {input.script} 8 {input.mri} {output}"
-
-########################################################################
-# MODELS                                                               #
-########################################################################
-
-all_targets['models'] = [
-#    "models/sfa_tcga/sfa.nc",
-]
-
-
-rule apply_tcga_sfa:
-    input:
-        script="src/models/apply_sfa.py",
-        gexp="data/processed/gene-expression.nc",
-        conf="data/external/tcga-breast-gexp+rppa+cn-sfa-solution.yaml",
-        sfa_tcga="data/external/tcga-breast-gexp+rppa+cn-sfa-solution.h5",
-    output:
-        "models/sfa_tcga/sfa.nc"
-    shell:
-        "{config[python]} {input.script} {input.gexp} {input.sfa_tcga} "
-        "{input.conf} {output}"
-
-rule cross_validate_mri_from_factors:
-    input:
-        script="src/models/cv_mri_from_factors.py",
-        sfa="models/sfa_tcga/sfa.nc",
-        mri="data/processed/mri-features-all.nc",
-    output:
-        "models/mri_from_factors/performance.nc",
-    shell:
-        "{config[python]} {input.script} {input.sfa} {input.mri} "
-        "{output}"
-
-rule cross_validate_factors_from_mri:
-    input:
-        script="src/models/cv_factors_from_mri.py",
-        mri="data/processed/mri-features-all.nc",
-        sfa="models/sfa_tcga/sfa.nc",
-    output:
-        "models/factors_from_mri/performance.nc",
-    shell:
-        "{config[python]} {input.script} {input.mri} {input.sfa} "
-        "{output}"
-
-
-rule run_sfa_gexp_sweep:
-    """Sweep penalty on gene expression data to determine range"""
-    input:
-        script="src/models/run_sfa.py",
-        data="data/processed/concat-data.nc",
-    threads:
-        64
-    output:
-        "models/sfa_mri_cad/gexp_sweep.nc"
-    shell:
-        "{config[python]} {input.script} {input.data} {output} "
-        "--k 5 --l-gexp=-15:5:.1 --l-mri=-15 --alpha=0.7 "
-        "--eps 1e-3 --max-iter 10000 "
-        "--threads {threads}"
-
-rule run_sfa_mri_sweep:
-    """Sweep penalty on MRI CAD data to determine range"""
-    input:
-        script="src/models/run_sfa.py",
-        data="data/processed/concat-data.nc",
-    threads:
-        64
-    output:
-        "models/sfa_mri_cad/mri_sweep.nc"
-    shell:
-        "{config[python]} {input.script} {input.data} {output} "
-        "--k 5 --l-gexp=-20 --l-mri=-25:10 --alpha=0.7 "
-        "--eps 1e-3 --max-iter 10000 "
-        "--threads {threads}"
-
-rule run_sfa_grid_search_coarse:
-    """Sweep penalty on MRI CAD and RNA-seq"""
-    input:
-        script="src/models/run_sfa.py",
-        data="data/processed/concat-data.nc",
-    threads:
-        128
-    output:
-        "models/sfa_mri_cad/parameter_sweep_coarse.nc"
-    shell:
-        "{config[python]} {input.script} {input.data} {output} "
-        "--k 2:10 --l-gexp=-13:1:1 --l-mri=-18:3:1 --alpha=0.1:.9:.2 "
-        "--eps 1e-3 --max-iter 10000 "
-        "--threads {threads}"
-
-rule run_sfa_grid_search_fine:
-    """Sweep penalty on MRI CAD and RNA-seq"""
-    input:
-        script="src/models/run_sfa.py",
-        data="data/processed/concat-data.nc",
-    threads:
-        128
-    output:
-        "models/sfa_mri_cad/parameter_sweep_fine.nc"
-    shell:
-        "{config[python]} {input.script} {input.data} {output} "
-        "--k 3 --l-gexp=-8:3:.5 --l-mri=-18:3:.5 --alpha=0.1:.9:.2 "
-        "--eps 1e-3 --max-iter 10000 "
-        "--threads {threads}"
-
-rule run_sfa_grid_search_fine_k10:
-    """Sweep penalty on MRI CAD and RNA-seq"""
-    input:
-        script="src/models/run_sfa.py",
-        data="data/processed/concat-data.nc",
-    threads:
-        128
-    output:
-        "models/sfa_mri_cad/parameter_sweep_fine_k10.nc"
-    shell:
-        "{config[python]} {input.script} {input.data} {output} "
-        "--k 10 --l-gexp=-8:3:.5 --l-mri=-18:3:.5 --alpha=0.1:.9:.2 "
-        "--eps 1e-3 --max-iter 10000 "
-        "--threads {threads}"
-
-rule eval_sfa:
-    input:
-        script="src/models/eval_sfa_bic.py",
-        models="models/sfa_mri_cad/{sweep}.nc",
-        data="data/processed/concat-data.nc",
-    output:
-        "models/sfa_mri_cad/{sweep}-bics.nc",
-    shell:
-        "{config[python]} {input.script} {input.models} {input.data} {output}"
-
-rule select_best_sfa:
-    input:
-        script="src/models/select_best_sfa.py",
-        models="models/sfa_mri_cad/{sweep}.nc",
-        bics="models/sfa_mri_cad/{sweep}-bics.nc",
-    output:
-        "models/sfa_mri_cad/{sweep}-best.nc",
-    shell:
-        "{config[python]} {input.script} {input.models} {input.bics} {output}"
 
 
 ########################################################################
@@ -564,45 +348,6 @@ rule gene_set_analysis_to_xlsx:
     shell:
         "{config[r]} {input.script} {input.rds} {output} .25 0.0"
 
-rule analyse_gene_sets_sfa:
-    input:
-        script="src/analysis/analyse-gene-set-enrichment-sfa.R",
-        gexp="data/processed/gene-expression.nc",
-        model="models/sfa_mri_cad/{sweep}-best.nc",
-        gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
-    output:
-        protected("analyses/gsea-sfa/{sweep}_{gene_set}_{abs}.Rds"),
-    threads:
-        16
-    shell:
-        "mkdir -p analyses/gsea; "
-        "{config[r]} {input.script} {input.gexp} {input.model} "
-        "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
-        "--perms 10000"
-
-n_pc_eigenbreasts = {
-    'contra_ds8': 12,
-}
-
-rule analyse_gene_sets_eigenbreasts:
-    input:
-        script="src/analysis/analyse-gene-set-enrichment-eigenbreasts.R",
-        gexp="data/processed/gene-expression.nc",
-        mri="data/processed/mri-eigenbreasts.nc",
-        gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
-    output:
-        protected("analyses/gsea/eigenbreasts_{mri_var}_{gene_set}_{abs}.Rds"),
-    params:
-        n_pc=lambda w: n_pc_eigenbreasts[w.mri_var]
-    threads:
-        4 # Takes a lot of memory
-    shell:
-        "mkdir -p analyses/gsea; "
-        "OPENBLAS_NUM_THREADS=1 {config[r]} {input.script} {input.gexp} "
-        "{input.mri} {wildcards.mri_var} {params.n_pc} "
-        "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
-        "--perms 10000"
-
 
 ########################################################################
 # REPORTS                                                              #
@@ -636,12 +381,6 @@ report_deps = {
         "src/reports/setup-matplotlib.py",
         "data/external/set-index.tsv",
     ],
-    "sfa-mg-parameter-sweeps": [
-        "src/plot.py",
-        "src/reports/setup-matplotlib.py",
-        "models/sfa_mri_cad/gexp_sweep-bics.nc",
-        "models/sfa_mri_cad/mri_sweep-bics.nc",
-    ]
 }
 
 features_to_report_name = {
@@ -731,8 +470,8 @@ all_targets['figures'] = expand(
         "fa-variance-explained",
         "cad-factors-heatmap",
         "gsea-heatmap_all-fa_c2.cgp_F_1",
-        "gsea-heatmap_all-fa_c2.cp_T_2",
-        "gsea-heatmap_er-fa_c2.cp_T_6",
+        "gsea-heatmap_all-fa_c2.cp_T_3",
+        "gsea-heatmap_all-fa_c2.cp_T_7",
         "clin-boxplot-ihc_subtype-volume",
     ],
     ext=['svg', 'pdf', 'png'],
@@ -800,7 +539,6 @@ rule figure_clin_boxplot_feature:
         "{input.mri_features} {wildcards.feature} "
         "{input.clinical_annotation} {wildcards.clin} "
         "{output}"
-
 
 rule figure_gsea_heatmap_fa:
     input:
