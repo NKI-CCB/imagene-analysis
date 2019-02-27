@@ -129,48 +129,9 @@ rule unzip_msigdb:
         "{wildcards.gene_set}.v5.2.{wildcards.gene_ids}.gmt > {output}\n"
         "touch {output}"
 
-rule download_zwart2011_er_signature:
-    output: "data/external/zwart2011/table_S2.xls"
-    params:
-        url="http://emboj.embopress.org/content/embojnl/30/23/4764/DC3/embed/"
-            "inline-supplementary-material-3.xls?download=true"
-
-    shell:
-        "mkdir -p data/external/zwart2011/\n"
-        "curl {params.url} -o {output}"
-
-rule download_refseq_annotation:
-    output: "data/external/refseq/rna.gbk.gz"
-    params:
-        url="ftp://ftp.ncbi.nlm.nih.gov/genomes/Homo_sapiens/"
-            "GRCh38.p10_interim_annotation/interim_GRCh38.p10_rna.gbk.gz",
-    shell:
-        "mkdir -p data/external/refseq/\n"
-        "curl {params.url} -o {output}"
-
 
 #-------------
 # Process Data
-
-rule process_genbank:
-    input:
-        genbank_flatfile="data/external/refseq/rna.gbk.gz",
-        script="src/data/parse_genbank_flatfile.py",
-    output: "data/external/refseq/rna_annotation.tsv"
-    shell:
-        "{config[python]} {input.script} {input.genbank_flatfile} {output}"
-
-rule process_zwart2011_signature:
-    input:
-        xls="data/external/zwart2011/table_S2.xls",
-        refseq="data/external/refseq/rna_annotation.tsv",
-        ensembl="data/external/ensembl_annotation.tsv",
-        script="src/data/map_genes_zwart2011.py",
-    output: "data/external/zwart2011/er_responsive_genes.tsv",
-    shell:
-        "{config[python]} {input.script} {input.xls} {input.refseq} "
-        "{input.ensembl} {output}"
-
 
 rule process_mri_features:
     input:
@@ -221,7 +182,6 @@ rule process_clincal_all_patients:
     shell:
         "{config[python]} {input.script} {input.tsv} {output} "
 
-
 rule select_er:
     input:
         script="src/data/select_samples.py",
@@ -240,21 +200,10 @@ rule select_er:
 
 all_targets['features'] = [
     "data/processed/mri-features-all.nc",
-    "data/processed/mri-features-all-reg-volume.nc",
     "data/processed/mri-features-all-fa.nc",
     "data/processed/mri-features-er.nc",
-    "data/processed/mri-features-er-reg-volume.nc",
     "data/processed/mri-features-er-fa.nc",
 ]
-
-rule regress_out_volume:
-    input:
-        script="src/features/regress_out_mri_var.py",
-        mri="data/processed/mri-features-{subset}.nc",
-    output:
-        "data/processed/mri-features-{subset}-reg-volume.nc"
-    shell:
-        "{config[python]} {input.script} {input.mri} {output}"
 
 rule factor_analysis_mri_features:
     input:
@@ -271,8 +220,8 @@ rule factor_analysis_mri_features:
 ########################################################################
 
 mri_features = [
-    "mri-features-all", "mri-features-all-fa", "mri-features-all-reg-volume",
-    "mri-features-er", "mri-features-er-fa", "mri-features-er-reg-volume",
+    "mri-features-all", "mri-features-all-fa",
+    "mri-features-er", "mri-features-er-fa",
 ]
 
 all_targets['analyses'] = expand(
@@ -310,22 +259,6 @@ rule analyse_gene_sets:
         "{config[r]} {input.script} {input.gexp} {input.mri} "
         "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
         "--perms 10000"
-
-rule analyse_gene_sets_keep_es:
-    input:
-        script="src/analysis/analyse-gene-set-enrichment.R",
-        gexp="data/processed/gene-expression.nc",
-        mri="data/processed/{mri}.nc",
-        gene_sets="data/external/msigdb/{gene_set}.v5.2.entrez.gmt",
-    output:
-        protected("analyses/gsea/{mri}_{gene_set}_{abs}+es.Rds"),
-    threads:
-        4 # Takes a lot of memory
-    shell:
-        "mkdir -p analyses/gsea; "
-        "{config[r]} {input.script} {input.gexp} {input.mri} "
-        "{input.gene_sets} {output} --abs {wildcards.abs} --threads {threads} "
-        "--perms 10000 --return es_null"
 
 rule gene_set_analysis_to_netcdf:
     input:
@@ -386,10 +319,8 @@ report_deps = {
 features_to_report_name = {
     "mri-features-all": "gsea",
     "mri-features-all-fa": "gsea-fa",
-    "mri-features-all-reg-volume": "gsea-reg",
     "mri-features-er": "gsea-er",
     "mri-features-er-fa": "gsea-er-fa",
-    "mri-features-er-reg-volume": "gsea-er-reg",
 }
 
 for mri_f in mri_features:
