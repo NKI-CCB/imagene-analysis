@@ -45,6 +45,7 @@ if __name__ == "__main__":
     data_set = read_mri_xlsx(args.mri_data, args.study_nr_col)
     del data_set['mean_vox_val']
     del data_set['variance_vox_val']
+    del data_set['PCE_top10percent']
     data_set.attrs['title'] = ("MRI features from Margins of samples with "
                                "gene expression data from Imagene")
 
