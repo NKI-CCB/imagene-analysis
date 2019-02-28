@@ -11,7 +11,6 @@ feature_order = [
     'ser', 'washout',
     'circularity',
     'irregularity',
-    'PCE_top10percent',
 ]
 
 feature_display_names = {
@@ -38,7 +37,6 @@ feature_display_names = {
     'variance_vox_val': "Variance Pre-Contrast Voxel Value",
     'circularity': "Circularity",
     'irregularity': "Irregularity",
-    'PCE_top10percent': "Contralateral Parenchymal Enhancement",
 }
 
 factor_display_names = {
@@ -47,7 +45,6 @@ factor_display_names = {
     'smoothness': "Smoothness",
     'sharpness_var': "Sharpness (variation)",
     'late_enhancement': "Late Enhancement",
-    'CPE': "CPE",
     'init_enhancement': "Initial Enhancement",
     'circularity': "Circularity",
     'sharpness_mean': "Sharpness (mean)",

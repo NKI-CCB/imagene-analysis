@@ -53,15 +53,15 @@ def plot_fa_variance_explained(mri_features, out):
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
             ax.spines['left'].set_position(('outward', 10))
-            ax.axvline(8, ls='-', lw=0.5, color='grey')
+            ax.axvline(7, ls='-', lw=0.5, color='grey')
 
         axs[2].set_xlabel("Principal Component")
         axs[2].set_xlim(1, len(pca.explained_variance_))
         axs[2].set_xticks([1, 6, 11, 16, 21])
-        axs[2].set_xticks([8], minor=True)
+        axs[2].set_xticks([7], minor=True)
         axs[0].set_xticklabels('', minor=True)
         axs[1].set_xticklabels('', minor=True)
-        axs[2].set_xticklabels(['8'], {'fontsize': 8}, minor=True)
+        axs[2].set_xticklabels(['7'], {'fontsize': 8}, minor=True)
 
         fig.savefig(out, format="svg")
 
