@@ -212,7 +212,7 @@ rule factor_analysis_mri_features:
     output:
         "data/processed/mri-features-{subset}-fa.nc"
     shell:
-        "{config[python]} {input.script} 8 {input.mri} {output}"
+        "{config[python]} {input.script} 7 {input.mri} {output}"
 
 
 ########################################################################
@@ -358,7 +358,6 @@ rule markdown_to_html:
     shell:
         "{config[pandoc]} "
         "-t html5 "
-        "--smart "
         "--standalone "
         "--mathjax "
         "--template=reports/pandoc-template.html "
@@ -367,7 +366,7 @@ rule markdown_to_html:
         "--toc "
         "--highlight-style pygments "
         "--section-divs "
-        "--filter pandoc-sidenote "
+#        "--filter pandoc-sidenote "
         "{input.md} -o {output}"
 
 
