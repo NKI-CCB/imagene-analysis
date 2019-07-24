@@ -23,6 +23,20 @@ clinical = xr.open_dataset('data/processed/clinical_all-patients.nc',
 clinical_rna = xr.open_dataset('data/processed/clinical.nc',
                                decode_cf=False)
 clinical['RNA'] = ('case', np.isin(clinical['case'], clinical_rna['case']))
+clinical['lymph_node_status'] = ('case', np.full((clinical.sizes['case'], ), '', object))
+clinical['lymph_node_status'][clinical['positive_lymph_nodes'] == 0] = 'negative'
+clinical['lymph_node_status'][clinical['positive_lymph_nodes'] == 1] = '1'
+clinical['lymph_node_status'][clinical['positive_lymph_nodes'] == 2] = '2'
+clinical['lymph_node_status'][clinical['positive_lymph_nodes'] == 3] = '3'
+clinical['lymph_node_status'][clinical['positive_lymph_nodes'] > 3] = '4+'
+```
+
+## Statistics ##
+For Radiology abstract
+
+```python stats
+print(clinical['age_at_diagnosis'].mean().item())
+print(clinical['age_at_diagnosis'].std().item())
 ```
 
 ## Table ##
@@ -36,8 +50,8 @@ def summarize_continous(desc, var, unit):
     min_rna = clinical[var][clinical['RNA']].min().item()
     max_rna = clinical[var][clinical['RNA']].max().item()
     clin_table[(desc, '')] = [
-        f"{mean_all:.0f} {unit} ({min_all:.0f}-{max_all:.0f})",
-        f"{mean_rna:.0f} {unit} ({min_rna:.0f}-{max_rna:.0f})"]
+        f"{mean_all:.1f} {unit} ({min_all:.1f}-{max_all:.1f})",
+        f"{mean_rna:.1f} {unit} ({min_rna:.1f}-{max_rna:.1f})"]
 
 def summarize_factor(desc, var):
     fill_value = clinical[var].attrs.get('_FillValue', '')
@@ -71,6 +85,7 @@ summarize_continous('Tumor Size (Range)', 'largest_diameter_mri',
                     'mm')
 summarize_factor('Grade', 'grade')
 summarize_factor('Subtype', 'ihc_subtype')
+summarize_factor('Lymph-node status', 'lymph_node_status')
 summarize_boolean('Radiotherapy', 'adjuvant_radiotherapy')
 summarize_boolean('Chemotherapy', 'adjuvant_chemotherapy')
 summarize_boolean('Hormonal therapy', 'adjuvant_hormonal_therapy')

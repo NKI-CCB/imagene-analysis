@@ -184,7 +184,7 @@ def plot_gsea_heatmap(gsea, genesets_annot, factor_idx, fig, abs):
     cbar.ax.set_xticklabels(cbar_tick_labels)
     ax.set_xticklabels("")
     ax.tick_params(bottom='off')
-    ax.set_ylabel("MR Factor")
+    ax.set_ylabel("MRI Factor")
     ax.set_xlabel("")
     ax.spines['top'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -253,7 +253,7 @@ def plot_gsea_heatmap_(gsea_results, sel_genesets, factor, out):
     gsea = xr.open_dataset(gsea_results).load()
     gsea['gene_set'] = (xr.apply_ufunc(np.char.decode, gsea['gene_set'])
                         .astype('object'))
-    gsea['mri_feature'] = gsea['mri_feature'].astype(int)
+    gsea['mri_feature'] = np.arange(1, gsea['mri_feature'].shape[0]+1, dtype='i2')
 
     geneset_annot = (pd.read_table(sel_genesets, sep='\t', quotechar='"',
                                    comment='#').
