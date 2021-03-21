@@ -1,7 +1,7 @@
 Integration of MRI and RNAseq data in the Imagene Project
 =========================================================
 
-Integration of MRI and RNAseq data of the Imagene project.
+Integration of MRI and RNAseq data of the Imagene project. Paper published in Radiology: "Radiogenomic analysis of breast cancer by linking MRI phenotypes with tumor gene expression." https://doi.org/10.1148/radiol.2020191453.
 
 To make a virtual environment for R and Python usage:
 ```sh
