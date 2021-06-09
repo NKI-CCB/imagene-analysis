@@ -9,4 +9,4 @@ nbconvert: jupyter nbconvert
 
 # How to download the data.
 download_func: download_scp
-download_root: "harris.rhpc.nki.nl:/DATA/t.bismeijer/Store/Imagene/"
+download_root: ""
